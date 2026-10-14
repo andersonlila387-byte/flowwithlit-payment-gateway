@@ -1,0 +1,38 @@
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Never serve server configuration, stored mail, or database scripts publicly.
+RewriteRule ^(?:storage|config|database|services|scratch|tests|go|docs)(?:/|$) - [F,L,NC]
+RewriteRule (^|/)\.(?:env|git)(?:[./]|$) - [F,L,NC]
+
+# 0. Set DirectoryIndex to prioritize index.php
+DirectoryIndex index.php index.html
+
+# Hosted customer checkout uses an opaque token. The token is resolved server-side;
+# amount, customer data, and merchant details are never placed in the URL.
+RewriteRule ^checkout/([A-Za-z0-9_-]{16,80})/?$ checkout.php?token=$1 [QSA,L,NC]
+RewriteRule ^pay/([A-Za-z0-9_-]{16,80})/?$ checkout.php?token=$1 [QSA,L,NC]
+
+# 1. Map extensionless URLs to .php files if they exist
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# 2. Fallback to .html files if .php does not exist
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^([^\.]+)$ $1.html [NC,L]
+
+# 3. API endpoints must keep their .php URL. Redirecting a POST would turn it into a GET.
+RewriteRule ^api/ - [L]
+
+# 4. Redirect explicit .php and .html URLs to extensionless URLs (e.g., /about.php -> /about)
+RewriteCond %{THE_REQUEST} \s/+(.+)\.(php|html)[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 5. Prevent Directory Browsing
+Options -Indexes
+
+# 6. UTF-8 Encoding
+AddDefaultCharset UTF-8

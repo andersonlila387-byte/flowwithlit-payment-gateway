@@ -1,0 +1,31 @@
+.metrics-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.metrics-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.metrics-4{grid-template-columns:1fr}}
+.auth-heading{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.auth-dirty{font-size:12px;color:#b97a06}
+.auth-table td,.auth-table th{white-space:nowrap;vertical-align:middle}
+.auth-table small{display:block;color:var(--muted);font-size:11px;margin-top:2px;white-space:normal;max-width:34ch}
+.auth-actions{display:flex;gap:6px;justify-content:flex-end}
+.auth-actions .button{border:1px solid var(--line)}
+.auth-actions .approve{background:var(--navy);color:#fff;border-color:var(--navy)}
+.auth-actions [disabled]{opacity:.45}
+.auth-matrix-wrap{max-height:70vh}
+.auth-matrix{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.auth-matrix th,.auth-matrix td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.auth-matrix thead th{position:sticky;top:0;z-index:2;background:var(--surface);font-weight:600;color:var(--muted)}
+.auth-matrix tbody th{position:sticky;left:0;z-index:1;background:var(--surface);font-weight:400;min-width:200px}
+.auth-matrix thead th:first-child{left:0;z-index:3}
+.auth-matrix .group th{background:var(--soft);font-weight:600;color:var(--navy);font-size:11px}
+.auth-matrix select{height:28px;min-width:104px;padding:0 6px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--text);font-size:12px}
+.auth-matrix select.changed{border-color:#e0a12b;background:rgba(245,158,11,.1)}
+.auth-matrix select:disabled{opacity:.6;cursor:not-allowed}
+.auth-matrix small{display:block;font-size:11px;color:var(--muted)}
+.auth-lock{display:inline-flex;align-items:center;gap:4px}.auth-lock .icon{width:11px;height:11px}
+.auth-rules{display:grid;gap:0}
+.auth-rule{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.auth-rule:first-child{border-top:0}
+.auth-rule strong{display:block;font-weight:600}.auth-rule span.d{font-size:12px;color:var(--muted)}
+.auth-rule-controls{display:flex;align-items:center;gap:12px}
+.auth-rule-controls input[type=number]{width:140px;height:30px;padding:0 8px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--text)}
+.auth-rule-controls label{display:flex;align-items:center;gap:6px;font-size:12px}
+.auth-rule-controls input[type=number]:disabled{opacity:.5}

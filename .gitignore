@@ -1,0 +1,22 @@
+/config/smtp.local.php
+/storage/mail/
+/vendor/
+
+# Local environment and server-only credentials.
+.env
+.env.*
+!.env.example
+/config/*.local.php
+
+# Private keys, certificates, and temporary secrets.
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Runtime data and dependency caches.
+/storage/private/
+/storage/uploads/
+/node_modules/

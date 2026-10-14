@@ -1,0 +1,19 @@
+.metrics-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.metrics-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.metrics-4{grid-template-columns:1fr}}
+.charge-table td,.charge-table th{white-space:nowrap;vertical-align:middle}
+.charge-table small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.charge-status{display:inline-flex;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;background:rgba(16,185,129,.12);color:#0f9a6c}
+.charge-status.off{background:rgba(101,113,138,.14);color:var(--muted)}
+.charge-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.charge-fields [hidden],.charge-bands-wrap[hidden]{display:none!important}
+.charge-group{margin:.2rem 0 .5rem;font-size:.95rem;color:var(--ink,#172b4d)}
+.charge-band{display:grid;grid-template-columns:1fr 1fr auto;gap:.6rem;align-items:end;margin-bottom:.6rem}
+.charge-band .icon-button{width:34px;height:38px;border:1px solid var(--line);border-radius:.5rem}
+.charge-band .icon-button:disabled{opacity:.35}
+.charge-bands-wrap .button{border:1px solid var(--line)}
+.deposit-modal label.charge-check{display:flex;align-items:center;gap:.6rem;font-weight:500}
+.deposit-modal .charge-check input{width:auto;padding:0}
+.charge-preview{display:grid;gap:.5rem;padding:.85rem;border-radius:.6rem;background:var(--soft,#f6f7f9)}
+.charge-preview p{margin:0;font-size:.85rem;color:var(--ink,#172b4d);line-height:1.5}
+@media(max-width:600px){.charge-fields{grid-template-columns:1fr}}

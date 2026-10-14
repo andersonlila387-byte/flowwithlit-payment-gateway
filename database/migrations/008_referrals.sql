@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS referral_codes (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL UNIQUE,
+  code VARCHAR(40) NOT NULL UNIQUE,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS referrals (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  referrer_user_id INT UNSIGNED NOT NULL,
+  referred_user_id INT UNSIGNED NOT NULL UNIQUE,
+  referral_code VARCHAR(40) NOT NULL,
+  reward_amount DECIMAL(36,18) NOT NULL DEFAULT 500,
+  currency_code VARCHAR(12) NOT NULL DEFAULT 'NGN',
+  status ENUM('pending','qualified','rejected') NOT NULL DEFAULT 'pending',
+  rewarded_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(referrer_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(referred_user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(currency_code) REFERENCES currencies(code),
+  INDEX idx_referrals_referrer(referrer_user_id,status)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS referral_rewards (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  referral_id INT UNSIGNED NOT NULL UNIQUE,
+  user_id INT UNSIGNED NOT NULL,
+  transaction_id INT UNSIGNED NULL,
+  amount DECIMAL(36,18) NOT NULL,
+  currency_code VARCHAR(12) NOT NULL DEFAULT 'NGN',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(referral_id) REFERENCES referrals(id) ON DELETE CASCADE,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY(transaction_id) REFERENCES transactions(id) ON DELETE SET NULL,
+  FOREIGN KEY(currency_code) REFERENCES currencies(code)
+) ENGINE=InnoDB;

@@ -1,0 +1,7 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__.'/../../config/response.php';require_once __DIR__.'/../../config/database.php';require_once __DIR__.'/../../services/GatewayJobQueue.php';require_once __DIR__.'/../../services/ReceivingAccountProvisioner.php';
+if(($_SERVER['REQUEST_METHOD']??'GET')!=='POST')jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405);
+$expected=(string)(getenv('FLOW_GO_SERVICE_SECRET')?:'');$given=(string)($_SERVER['HTTP_X_FLOW_SERVICE_SECRET']??'');if($expected===''||!hash_equals($expected,$given))jsonResponse(['success'=>false,'error'=>'Unauthorized.'],401);
+$db=Database::getInstance();$job=GatewayJobQueue::claim($db,(string)($_SERVER['HTTP_X_FLOW_WORKER']??'go-worker'));if(!$job)jsonResponse(['success'=>true,'job'=>null]);
+try{$payload=json_decode((string)$job['payload'],true,512,JSON_THROW_ON_ERROR);if($job['job_type']==='provision_receiving_account'){$result=(new ReceivingAccountProvisioner($db))->provision((int)$payload['user_id'],(string)($payload['currency']??'NGN'));}else throw new DomainException('Unknown gateway job.');GatewayJobQueue::complete($db,(int)$job['id']);jsonResponse(['success'=>true,'job'=>['id'=>(int)$job['id'],'type'=>$job['job_type'],'result'=>$result]]);}catch(Throwable $e){GatewayJobQueue::fail($db,(int)$job['id'],$e->getMessage(),(int)$job['attempts']);jsonResponse(['success'=>false,'error'=>'Job failed and was scheduled for retry.'],500);}

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /admin/
+Disallow: /api/
+Disallow: /config/
+Disallow: /database/
+Disallow: /services/
+Disallow: /storage/
+Disallow: /tests/
+Sitemap: /flowwithlit/sitemap.xml

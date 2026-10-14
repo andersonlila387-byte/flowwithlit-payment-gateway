@@ -1,0 +1,6 @@
+<?php
+require_once __DIR__ . '/../../config/response.php'; require_once __DIR__ . '/../../config/security.php';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405);
+$pdo=Database::getInstance(); $session=validateSession($pdo,getBearerToken() ?: ($_GET['token']??''),15); if(!$session['valid']||!empty($session['is_2fa_pending'])) jsonResponse(['success'=>false,'error'=>'Please sign in to continue.'],401); $uid=(int)$session['user']['id'];
+$q=$pdo->prepare('SELECT code FROM referral_codes WHERE user_id=?');$q->execute([$uid]);$code=$q->fetchColumn();if(!$code){$code='FWL'.strtoupper(substr(hash('sha256',$uid.'|'.bin2hex(random_bytes(8))),0,10));$pdo->prepare('INSERT INTO referral_codes(user_id,code) VALUES(?,?)')->execute([$uid,$code]);}
+$s=$pdo->prepare("SELECT COUNT(*) total, SUM(status='qualified') qualified, COALESCE(SUM(CASE WHEN status='qualified' THEN reward_amount ELSE 0 END),0) earned FROM referrals WHERE referrer_user_id=?");$s->execute([$uid]);$stats=$s->fetch()?:[];jsonResponse(['success'=>true,'code'=>$code,'reward_amount'=>'500.00','currency'=>'NGN','total_referrals'=>(int)($stats['total']??0),'qualified_referrals'=>(int)($stats['qualified']??0),'earned'=>(string)($stats['earned']??0)]);

@@ -1,0 +1,9 @@
+/* The Users branch stays usable when the navigation is icon-only. */
+@media(min-width:801px){
+  .sidebar-collapsed .navigation{position:relative}
+  .sidebar-collapsed .nav-parent + .user-subnav:not([hidden]){display:grid;position:absolute;z-index:45;left:62px;top:76px;width:190px;margin:0;padding:8px 10px;border:1px solid #c8dfed;border-radius:7px;background:#fff;box-shadow:0 12px 30px #0b254526;animation:admin-submenu-slide .18s ease-out}
+  .sidebar-collapsed .nav-parent + .user-subnav:before,.sidebar-collapsed .nav-parent + .user-subnav:after,.sidebar-collapsed .nav-parent + .user-subnav a:before{display:none}
+  .sidebar-collapsed .nav-parent + .user-subnav a{padding:0 9px;border-radius:4px}
+  .sidebar-collapsed .nav-parent + .user-subnav a.active:after{right:0;border-radius:0 4px 4px 0}
+  .dark .sidebar-collapsed .nav-parent + .user-subnav:not([hidden]){background:#293246;border-color:#3b5a70}
+}

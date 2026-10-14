@@ -1,0 +1,5 @@
+<?php
+require_once __DIR__ . '/../../config/response.php'; require_once __DIR__ . '/../../config/security.php';
+header('Cache-Control: no-store');
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405);
+$pdo=Database::getInstance(); $input=getJsonInput(); $session=validateSession($pdo,getBearerToken()?:($input['token']??''),15); if(!$session['valid']||!empty($session['is_2fa_pending'])) jsonResponse(['success'=>false,'error'=>'Please sign in to continue.'],401); $token=strtoupper(trim((string)($input['public_token']??''))); if(!preg_match('/^[A-F0-9]{24,64}$/',$token)) jsonResponse(['success'=>false,'error'=>'Invalid payment link.'],422); $q=$pdo->prepare('UPDATE payment_links SET status="disabled" WHERE public_token=? AND user_id=? AND status<>"disabled"'); $q->execute([$token,(int)$session['user']['id']]); if($q->rowCount()===0) jsonResponse(['success'=>false,'error'=>'Payment link not found.'],404); jsonResponse(['success'=>true]);

@@ -1,0 +1,5 @@
+<?php
+require_once __DIR__ . '/../_admin.php';
+$input=adminMethod(['GET','POST']); $pdo=Database::getInstance(); [$session,$role]=requireAdmin($pdo,$input);
+if($_SERVER['REQUEST_METHOD']==='GET'){requireAdminRole($role,['finance','super_admin'],'view currency settings');jsonResponse(['success'=>true,'currencies'=>$pdo->query('SELECT code,name,kind,decimals,network,is_enabled FROM currencies ORDER BY kind,code')->fetchAll()]);}
+if($role!=='super_admin')jsonResponse(['success'=>false,'error'=>'Only super administrators can change currencies.'],403);$code=strtoupper(trim((string)($input['code']??'')));$enabled=(int)!empty($input['is_enabled']);if(!preg_match('/^[A-Z0-9]{2,12}$/',$code))jsonResponse(['success'=>false,'error'=>'Invalid currency code.'],422);$stmt=$pdo->prepare('UPDATE currencies SET is_enabled=? WHERE code=?');$stmt->execute([$enabled,$code]);if(!$stmt->rowCount())jsonResponse(['success'=>false,'error'=>'Currency not found.'],404);adminAudit($pdo,(int)$session['admin']['id'],'currency.toggled','currency',$code,['is_enabled'=>$enabled]);jsonResponse(['success'=>true]);

@@ -1,0 +1,27 @@
+.metrics-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.metrics-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.metrics-4{grid-template-columns:1fr}}
+.promo-list-heading{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.promo-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.promo-search{position:relative;display:flex;align-items:center;min-width:220px}
+.promo-search .icon{position:absolute;left:10px;width:14px;height:14px;color:var(--muted);pointer-events:none}
+.promo-search input{width:100%;height:32px;padding:0 10px 0 30px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--text);font-size:12px}
+.promo-table td,.promo-table th{white-space:nowrap;vertical-align:middle}
+.promo-table small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.promo-code{display:inline-flex;align-items:center;gap:6px;font-weight:600;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.promo-usage{min-width:110px}
+.promo-bar{height:4px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:5px}
+.promo-bar i{display:block;height:100%;background:var(--navy);border-radius:inherit}
+.promo-status{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;background:rgba(101,113,138,.14);color:var(--muted)}
+.promo-status.active{background:rgba(16,185,129,.12);color:#0f9a6c}
+.promo-status.scheduled{background:rgba(59,130,246,.12);color:#2f6fe0}
+.promo-status.paused{background:rgba(245,158,11,.14);color:#b97a06}
+.promo-status.expired,.promo-status.exhausted{background:rgba(239,68,68,.1);color:#d64545}
+.promo-actions{display:flex;gap:2px;justify-content:flex-end}
+.promo-actions .icon-button{width:28px;height:28px}
+.promo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.promo-grid>label:first-child,.promo-grid>label:nth-child(2){grid-column:span 1}
+.promo-code-field{display:flex;gap:6px}.promo-code-field input{text-transform:uppercase;letter-spacing:.04em}.promo-code-field .button{border:1px solid var(--line);flex:none}
+.promo-hint{font-weight:400;font-size:.75rem;color:var(--muted)}
+.promo-grid [hidden]{display:none!important}
+@media(max-width:600px){.promo-grid{grid-template-columns:1fr}.promo-search{min-width:100%;flex:1 1 100%}.promo-tools .select-control{flex:1}}

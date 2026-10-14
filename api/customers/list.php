@@ -1,0 +1,8 @@
+<?php
+require_once __DIR__ . '/../../config/response.php'; require_once __DIR__ . '/../../config/security.php';
+$input = $_GET; if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405); $pdo = Database::getInstance(); $session = validateSession($pdo,getBearerToken() ?: ($input['token'] ?? ''),15); if(!$session['valid']||!empty($session['is_2fa_pending'])) jsonResponse(['success'=>false,'error'=>'Please sign in to continue.'],401);
+$business = $pdo->prepare('SELECT id FROM businesses WHERE owner_user_id=? LIMIT 1'); $business->execute([(int)$session['user']['id']]); $businessId = (int)$business->fetchColumn();
+if (!$businessId) jsonResponse(['success'=>true,'customers'=>[],'total'=>0]);
+$q = trim((string)($input['q'] ?? '')); $limit = max(1,min(100,(int)($input['limit'] ?? 50))); $like='%'.mb_substr($q,0,80).'%';
+$stmt=$pdo->prepare("SELECT c.uuid,c.email,c.full_name,c.phone,c.created_at,COUNT(CASE WHEN p.status='succeeded' THEN 1 END) payment_count,COALESCE(SUM(CASE WHEN p.status='succeeded' THEN t.amount ELSE 0 END),0) lifetime_value FROM customers c LEFT JOIN payment_links pl ON pl.business_id=c.business_id LEFT JOIN payments p ON p.payment_link_id=pl.id AND p.customer_email=c.email LEFT JOIN transactions t ON t.id=p.transaction_id WHERE c.business_id=? AND (?='' OR c.full_name LIKE ? OR c.email LIKE ? OR c.phone LIKE ?) GROUP BY c.id ORDER BY c.created_at DESC LIMIT {$limit}");
+$stmt->execute([$businessId,$q,$like,$like,$like]); $rows=$stmt->fetchAll(); jsonResponse(['success'=>true,'customers'=>$rows,'total'=>count($rows)]);

@@ -1,0 +1,16 @@
+<?php
+require_once __DIR__ . '/../../config/response.php'; require_once __DIR__ . '/../../config/security.php';
+header('Cache-Control: no-store'); if(($_SERVER['REQUEST_METHOD']??'GET')!=='POST') jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405); $pdo=Database::getInstance(); $input=getJsonInput(); $session=validateSession($pdo,getBearerToken()?:($input['token']??''),15); if(!$session['valid']||!empty($session['is_2fa_pending'])) jsonResponse(['success'=>false,'error'=>'Please sign in to continue.'],401); $uid=(int)$session['user']['id'];
+$title=trim((string)($input['title']??'')); $currency=strtoupper(trim((string)($input['currency']??'NGN'))); $amount=$input['amount']??null; if($title==='') jsonResponse(['success'=>false,'error'=>'Title is required.'],422); if(!in_array($currency,['NGN','USDT','USDC','BTC','ETH','SOL'],true)) jsonResponse(['success'=>false,'error'=>'Unsupported currency.'],422); if($amount!==null&&(!is_numeric($amount)||(float)$amount<=0)) jsonResponse(['success'=>false,'error'=>'Amount must be positive.'],422); $expires=(string)($input['expires_at']??''); $expiresAt=null; if($expires!==''){ $ts=strtotime($expires); if($ts===false||$ts<=time()) jsonResponse(['success'=>false,'error'=>'Expiry must be in the future.'],422); $expiresAt=gmdate('Y-m-d H:i:s',$ts); }
+$returnUrl=trim((string)($input['return_url']??'')); $cancelUrl=trim((string)($input['cancel_url']??''));
+foreach (['return_url'=>$returnUrl,'cancel_url'=>$cancelUrl] as $urlName=>$url) { if ($url!=='' && (!filter_var($url,FILTER_VALIDATE_URL) || !in_array(strtolower((string)parse_url($url,PHP_URL_SCHEME)),['https','http'],true))) jsonResponse(['success'=>false,'error'=>ucwords(str_replace('_',' ',$urlName)).' must be a valid HTTP or HTTPS URL.'],422); if (strlen($url)>500) jsonResponse(['success'=>false,'error'=>ucwords(str_replace('_',' ',$urlName)).' is too long.'],422); }
+$uuid=generateUUID();
+// This is a high-entropy opaque capability token, not an encoded payload. It cannot
+// be decoded to discover the amount, customer, merchant, or API credentials.
+$token=strtoupper(bin2hex(random_bytes(32)));
+$business=$pdo->prepare('SELECT id FROM businesses WHERE owner_user_id=? ORDER BY id ASC LIMIT 1');
+$business->execute([$uid]);
+$businessId=$business->fetchColumn();
+$stmt=$pdo->prepare('INSERT INTO payment_links(uuid,user_id,business_id,public_token,title,description,amount,currency_code,status,expires_at,return_url,cancel_url) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)');
+$stmt->execute([$uuid,$uid,$businessId?:null,$token,$title,substr(trim((string)($input['description']??'')),0,1000),$amount!==null?(string)$amount:null,$currency,'active',$expiresAt,$returnUrl?:null,$cancelUrl?:null]);
+$checkoutBase=rtrim((string)(getenv('FLOW_CHECKOUT_URL')?:''),'/'); $appBase=rtrim(str_replace('/api/payment-links/create.php','',(string)($_SERVER['SCRIPT_NAME']??'')),'/'); $checkoutUrl=$checkoutBase!==''?$checkoutBase.'/'.$token:$appBase.'/checkout/'.$token; jsonResponse(['success'=>true,'link'=>['uuid'=>$uuid,'public_token'=>$token,'title'=>$title,'currency_code'=>$currency,'amount'=>$amount,'status'=>'active','expires_at'=>$expiresAt,'return_url'=>$returnUrl?:null,'cancel_url'=>$cancelUrl?:null],'url'=>$checkoutUrl]);

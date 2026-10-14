@@ -1,0 +1,18 @@
+.metrics-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1200px){.metrics-5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.metrics-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.metrics-5{grid-template-columns:1fr}}
+.report-filters{flex-wrap:wrap}
+.report-date{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.report-date input{height:32px;padding:0 8px;border:1px solid var(--line);border-radius:3px;background:var(--surface);color:var(--text);font-size:12px}
+.report-chart-wrap{margin:18px 0 8px}
+.report-chart-wrap h3{margin:0 0 8px;font-size:14px;font-weight:600;color:var(--navy)}
+.report-chart{overflow-x:auto}
+.report-chart svg{display:block;width:100%;min-width:480px;height:auto}
+.report-chart .bar{fill:var(--navy)}.report-chart .bar:hover{opacity:.75}
+.report-chart .axis{stroke:var(--line)}.report-chart text{fill:var(--muted);font-size:10px}
+.report-table th.num,.report-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.report-table td,.report-table th{white-space:nowrap}
+.report-table tfoot td{font-weight:600;border-top:2px solid var(--line)}
+.report-rate{display:inline-block;min-width:44px}
+@media print{.sidebar,.topbar,.page-actions,.report-filters{display:none!important}.main-layout{margin-left:0}main{margin-top:0}}

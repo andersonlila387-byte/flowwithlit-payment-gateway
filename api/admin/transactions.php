@@ -1,0 +1,2 @@
+<?php
+require_once __DIR__ . '/../_admin.php';$input=adminMethod(['GET']);$pdo=Database::getInstance();[$session,$role]=requireAdmin($pdo,$input);requireAdminRole($role,['finance','super_admin'],'view transactions');$limit=max(1,min(200,(int)($input['limit']??100)));$stmt=$pdo->query("SELECT t.uuid,t.reference,t.user_id,t.type,t.status,t.currency_code,t.amount,t.fee_amount,t.provider,t.created_at,u.full_name,u.email FROM transactions t JOIN users u ON u.id=t.user_id ORDER BY t.created_at DESC LIMIT {$limit}");jsonResponse(['success'=>true,'transactions'=>$stmt->fetchAll()]);

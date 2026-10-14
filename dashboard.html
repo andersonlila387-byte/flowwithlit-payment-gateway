@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merchant & Security Portal — Flowwithlit</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="logo/flowwithlit-icon-32.png" />
+  <meta name="description" content="Flowwithlit Security Portal. Manage your account, toggle Two-Factor Authentication, and check active session security." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { 
+            sans: ['"IBM Plex Mono"', 'Inter', 'monospace', 'ui-sans-serif', 'system-ui'],
+            mono: ['"IBM Plex Mono"', 'monospace']
+          },
+          colors: {
+            brand: { 
+              50: '#eef4ff', 
+              100: '#d4e3ff', 
+              200: '#a8c7fa',
+              500: '#0b2545', 
+              600: '#071930', 
+              700: '#041124' 
+            },
+            mint: '#eef4ff',
+            ink: '#0a121e',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { 
+      font-family: 'IBM Plex Mono', 'Inter', monospace; 
+      color: #0a121e; 
+      letter-spacing: -0.015em;
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-ink antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- TOP DASHBOARD NAVIGATION HEADER -->
+  <header class="bg-[#0b2545] text-white py-4 px-6 shadow-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="index" class="flex items-center gap-2.5">
+        <img src="logo/full-logo.png" alt="Flowwithlit" class="h-10 sm:h-12 w-auto object-contain brightness-0 invert" />
+      </a>
+
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full text-xs font-mono">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="header-user-tag">@flow_user</span>
+        </div>
+
+        <button id="logout-btn" type="button" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-4 py-2 rounded-full transition border border-white/20">
+          <span>Logout</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+    
+    <!-- Top Welcome Banner -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-blue-50 text-[#0b2545] px-3 py-1 rounded-full text-xs font-semibold mb-2 border border-blue-200">
+          Account Status: Active &bull; Tier 1 Verified
+        </div>
+        <h1 id="welcome-name" class="text-2xl font-bold text-[#0b2545]">Welcome back</h1>
+        <p id="user-email-text" class="text-xs text-slate-500 font-mono mt-1">loading...</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs">
+          <span class="text-slate-400 block font-semibold text-[10px] uppercase">Your Flow Tag</span>
+          <span id="user-flow-tag" class="font-bold text-[#0b2545] font-mono text-sm">@flow_tag</span>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs">
+          <span class="text-slate-400 block font-semibold text-[10px] uppercase">Account Type</span>
+          <span id="user-account-type" class="font-bold text-slate-800 capitalize">Individual</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toast-banner" class="hidden mb-6 p-4 rounded-xl text-xs font-medium border"></div>
+
+    <!-- Security & 2FA Settings Card -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Card 1: 2FA Authentication Toggle (User Request Feature) -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#0b2545] flex items-center justify-center mb-4 border border-blue-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h2 class="text-lg font-bold text-[#0b2545]">Two-Factor Authentication (2FA)</h2>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+            Require a 6-digit verification code sent to your email whenever you sign in from a new device or session.
+          </p>
+
+          <div class="mt-6 flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div>
+              <span class="text-xs font-bold block text-slate-800">2FA Security Status</span>
+              <span id="2fa-status-badge" class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 bg-amber-100 text-amber-800 border border-amber-200">
+                Disabled
+              </span>
+            </div>
+
+            <!-- Toggle Switch -->
+            <button id="toggle-2fa-btn" type="button" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-300 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="false">
+              <span id="toggle-2fa-thumb" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+          <span>Status synced with database</span>
+          <span class="font-mono">UPDATE users</span>
+        </div>
+      </div>
+
+      <!-- Card 2: 15-Min Inactivity Auto-Logout Watcher -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#0b2545] flex items-center justify-center mb-4 border border-blue-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h2 class="text-lg font-bold text-[#0b2545]">15-Min Auto-Logout Watcher</h2>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+            For maximum financial security, inactive sessions are automatically terminated after 15 minutes of idle time.
+          </p>
+
+          <div class="mt-6 p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-500 font-medium">Session Status:</span>
+              <span id="session-status-text" class="font-bold text-emerald-600 font-mono">Active (Valid)</span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-500 font-medium">Auto-Check Interval:</span>
+              <span class="font-mono text-slate-700">Every 30s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+          <span>Tokens invalidated automatically</span>
+          <span class="font-mono">Bearer Auth</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Mobile App & API Integration -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-blue-50 text-[#0b2545] flex items-center justify-center mb-4 border border-blue-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <h2 class="text-lg font-bold text-[#0b2545]">Unified Mobile & Web API</h2>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+            Your token powers both the web portal and mobile app integrations cleanly.
+          </p>
+
+          <div class="mt-6 p-3.5 bg-slate-900 text-slate-200 rounded-xl text-xs font-mono overflow-x-auto">
+            <span class="text-blue-400">Authorization:</span> Bearer <span id="display-token" class="text-slate-400">token_hash...</span>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+          <a href="developers" class="text-blue-600 font-semibold hover:underline">View API Docs &rarr;</a>
+          <span class="font-mono">JSON CORS REST</span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- 2FA Confirmation Modal -->
+  <div id="otp-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
+      <div class="text-center mb-4">
+        <h3 class="text-lg font-bold text-[#0b2545]">Enable 2FA Confirmation</h3>
+        <p class="text-xs text-slate-500 mt-1">Enter a 6-digit confirmation code to confirm 2FA activation.</p>
+      </div>
+
+      <div id="modal-otp-banner" class="hidden mb-4 p-2.5 rounded-lg text-xs font-mono bg-blue-50 text-blue-900 border border-blue-200 text-center">
+        Demo Helper Code: <span id="modal-otp-code" class="font-bold">123456</span>
+      </div>
+
+      <input type="text" id="modal-otp-input" maxlength="6" placeholder="123456" class="w-full text-center text-lg font-bold tracking-widest font-mono py-2.5 bg-slate-50 border border-slate-200 rounded-xl mb-4 focus:outline-none focus:border-[#0b2545]" />
+
+      <div class="flex gap-3">
+        <button id="cancel-2fa-modal" type="button" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+          Cancel
+        </button>
+        <button id="confirm-2fa-modal" type="button" class="w-1/2 py-2.5 bg-[#0b2545] hover:bg-[#071930] text-white text-xs font-semibold rounded-xl transition">
+          Enable 2FA
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-6 px-6 text-center text-xs text-slate-500">
+    &copy; 2026 Flowwithlit Payments Inc. All rights reserved. &bull; <a href="privacy" class="hover:text-slate-800 transition">Privacy</a> &bull; <a href="terms" class="hover:text-slate-800 transition">Terms</a>
+  </footer>
+
+  <script>
+    const token = localStorage.getItem('flow_token');
+    const toastBanner = document.getElementById('toast-banner');
+
+    if (!token) {
+      window.location.href = 'login';
+    }
+
+    function showToast(msg, type = 'success') {
+      toastBanner.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-red-50', 'text-red-700', 'border-red-200');
+      if (type === 'success') {
+        toastBanner.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
+      } else {
+        toastBanner.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+      }
+      toastBanner.innerHTML = msg;
+    }
+
+    // Check Session on page load
+    async function checkSession() {
+      try {
+        const res = await fetch('api/auth/session-check.php', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          localStorage.removeItem('flow_token');
+          localStorage.removeItem('flow_user');
+          window.location.href = 'login?reason=inactivity';
+          return;
+        }
+
+        const user = data.user;
+        document.getElementById('welcome-name').innerText = `Welcome back, ${user.full_name}`;
+        document.getElementById('user-email-text').innerText = user.email;
+        document.getElementById('user-flow-tag').innerText = user.flow_tag;
+        document.getElementById('header-user-tag').innerText = user.flow_tag;
+        document.getElementById('user-account-type').innerText = user.account_type;
+        document.getElementById('display-token').innerText = token.substring(0, 16) + '...';
+
+        update2faUI(user.two_factor_enabled);
+
+      } catch (err) {
+      }
+    }
+
+    checkSession();
+
+    // Set up automated 15-minute inactivity session check every 30 seconds
+    setInterval(checkSession, 30000);
+
+    // 2FA UI Update helper
+    const toggle2faBtn   = document.getElementById('toggle-2fa-btn');
+    const toggle2faThumb = document.getElementById('toggle-2fa-thumb');
+    const badge2fa       = document.getElementById('2fa-status-badge');
+    let current2faState  = false;
+
+    function update2faUI(enabled) {
+      current2faState = enabled;
+      if (enabled) {
+        toggle2faBtn.setAttribute('aria-checked', 'true');
+        toggle2faBtn.className = 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-emerald-500 transition-colors duration-200 ease-in-out focus:outline-none';
+        toggle2faThumb.className = 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-5';
+        badge2fa.className = 'inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 bg-emerald-100 text-emerald-800 border border-emerald-200';
+        badge2fa.innerText = 'Enabled (Active)';
+      } else {
+        toggle2faBtn.setAttribute('aria-checked', 'false');
+        toggle2faBtn.className = 'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-300 transition-colors duration-200 ease-in-out focus:outline-none';
+        toggle2faThumb.className = 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0';
+        badge2fa.className = 'inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-1 bg-amber-100 text-amber-800 border border-amber-200';
+        badge2fa.innerText = 'Disabled';
+      }
+    }
+
+    // Toggle 2FA Button Handler
+    const otpModal = document.getElementById('otp-modal');
+    toggle2faBtn.addEventListener('click', async () => {
+      const targetState = !current2faState;
+
+      if (targetState) {
+        // Turning ON: generate verification code and open confirmation modal
+        try {
+          const userObj = JSON.parse(localStorage.getItem('flow_user') || '{}');
+          const res = await fetch('api/auth/resend-otp.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userObj.email, type: '2fa' })
+          });
+          const data = await res.json();
+          if (data.otp_simulated) {
+            document.getElementById('modal-otp-banner').classList.remove('hidden');
+            document.getElementById('modal-otp-code').innerText = data.otp_simulated;
+          }
+          otpModal.classList.remove('hidden');
+          otpModal.classList.add('flex');
+        } catch (err) {
+          showToast('Failed to trigger 2FA confirmation code.', 'error');
+        }
+      } else {
+        // Turning OFF: call toggle API directly
+        try {
+          const res = await fetch('api/auth/toggle-2fa.php', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ enable: false })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            update2faUI(false);
+            showToast('Two-Factor Authentication has been turned OFF.', 'success');
+          } else {
+            showToast(data.error || 'Failed to disable 2FA.', 'error');
+          }
+        } catch (err) {
+          showToast('Network error turning off 2FA.', 'error');
+        }
+      }
+    });
+
+    document.getElementById('cancel-2fa-modal').addEventListener('click', () => {
+      otpModal.classList.add('hidden');
+      otpModal.classList.remove('flex');
+    });
+
+    document.getElementById('confirm-2fa-modal').addEventListener('click', async () => {
+      const code = document.getElementById('modal-otp-input').value.trim();
+      try {
+        const res = await fetch('api/auth/toggle-2fa.php', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ enable: true, code })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          update2faUI(true);
+          otpModal.classList.add('hidden');
+          otpModal.classList.remove('flex');
+          showToast('Two-Factor Authentication has been successfully turned ON!', 'success');
+        } else {
+          alert(data.error || 'Invalid code.');
+        }
+      } catch (err) {
+        alert('Network error confirming 2FA.');
+      }
+    });
+
+    // Logout Handler
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      try {
+        await fetch('api/auth/logout.php', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (e) {}
+      localStorage.removeItem('flow_token');
+      localStorage.removeItem('flow_user');
+      window.location.href = 'login.php';
+    });
+  </script>
+</body>
+</html>
