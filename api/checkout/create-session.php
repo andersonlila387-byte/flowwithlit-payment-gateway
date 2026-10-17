@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../services/AccountLimits.php';
 
 header('Cache-Control: no-store');
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405);
@@ -14,6 +15,8 @@ $key = $pdo->prepare("SELECT k.id,k.business_id,k.environment,b.owner_user_id
 $key->execute([hash('sha256',$secret)]);
 $apiKey = $key->fetch();
 if (!$apiKey) jsonResponse(['success'=>false,'error'=>'API key is invalid or revoked.'],401);
+try {(new AccountLimits($pdo))->canCreateCheckout((int)$apiKey['owner_user_id']);}
+catch (DomainException $e) { jsonResponse(['success'=>false,'error'=>$e->getMessage()],403); }
 
 $input = getJsonInput();
 $title = trim((string)($input['title'] ?? ''));

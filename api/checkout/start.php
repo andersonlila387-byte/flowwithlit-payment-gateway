@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../services/AccountLimits.php';
+require_once __DIR__ . '/../../services/PromoService.php';
+require_once __DIR__ . '/../../services/Money.php';
 
 header('Cache-Control: no-store');
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -48,6 +51,16 @@ if (!$walletId) {
 $reference = 'CHK-' . strtoupper(bin2hex(random_bytes(10)));
 try {
     $pdo->beginTransaction();
+    $promoClaim=null;
+    $promoCode=trim((string)($input['promo_code']??''));
+    if($promoCode!==''){
+        if($link['currency_code']!=='NGN')throw new DomainException('Promo checkout discounts are currently available for NGN payments only.');
+        $customer=$pdo->prepare('SELECT id FROM users WHERE email=? AND status=\'active\' LIMIT 1 FOR UPDATE');$customer->execute([$email]);$customerId=(int)$customer->fetchColumn();
+        if(!$customerId)throw new DomainException('Sign in with the account that received this promo code before applying it.');
+        $promoClaim=(new PromoService($pdo))->prepareCheckoutDiscount($customerId,$promoCode,(string)$amount);
+        $amount=Money::sub((string)$amount,(string)$promoClaim['discount']);
+    }
+    (new AccountLimits($pdo))->incoming((int)$link['user_id'],(int)$walletId,(string)$link['currency_code'],(string)$amount);
     $tx = $pdo->prepare("INSERT INTO transactions
         (uuid,user_id,business_id,type,status,destination_wallet_id,currency_code,amount,fee_amount,reference,idempotency_key,provider,metadata)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
@@ -56,11 +69,15 @@ try {
         hash('sha256', 'checkout|' . $token . '|' . $email . '|' . $reference), 'flowwithlit',
         json_encode(['channel' => 'hosted_checkout', 'payment_link_token' => $token], JSON_UNESCAPED_SLASHES)]);
     $transactionId = (int)$pdo->lastInsertId();
+    if($promoClaim)(new PromoService($pdo))->recordCheckoutRedemption($promoClaim,$customerId,$transactionId);
     $payment = $pdo->prepare('INSERT INTO payments(payment_link_id,checkout_session_id,transaction_id,customer_email,customer_name,payment_method,status,provider) VALUES(?,?,?,?,?,?,?,?)');
     $payment->execute([$link['id'] ? (int)$link['id'] : null, $link['checkout_session_id'] ? (int)$link['checkout_session_id'] : null, $transactionId, $email, substr($name, 0, 191), $method, 'pending', $method === 'crypto' ? 'breet' : 'flowwithlit']);
     $pdo->commit();
     jsonResponse(['success' => true, 'status' => 'pending', 'reference' => $reference,
         'message' => 'Payment request created. Complete the bank transfer using the instructions provided by the merchant.']);
+} catch (InvalidArgumentException|DomainException $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    jsonResponse(['success' => false, 'error' => $e->getMessage()], 422);
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     error_log('Hosted checkout start failed: ' . $e->getMessage());

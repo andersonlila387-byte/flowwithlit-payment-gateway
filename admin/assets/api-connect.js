@@ -28,7 +28,10 @@
   };
 
   const renderSummary = () => {
-    const st = providers.map(p => statusOf(conns[p.key])[0]);
+    // SMTP is configured in Settings, where the same credentials are used by
+    // EmailService. Do not count the legacy integration row as a second,
+    // independent connection.
+    const st = providers.filter(p => p.key !== 'smtp').map(p => statusOf(conns[p.key])[0]);
     $('#api-connected').textContent = st.filter(s => s === 'connected').length;
     $('#api-attention').textContent = st.filter(s => s === 'error').length;
     $('#api-unset').textContent = st.filter(s => s === 'not_configured').length;
@@ -43,6 +46,13 @@
     const list = providers.filter(p => (!category || p.category === category) && (!q || `${p.name} ${p.description}`.toLowerCase().includes(q)));
     $('#api-empty').hidden = list.length > 0;
     $('#api-grid').innerHTML = list.map(p => {
+      if (p.key === 'smtp') return `<article class="api-card">
+        <div class="api-top"><span class="api-logo"><i data-lucide="mail-check" class="icon" aria-hidden="true"></i></span><div><h3>SMTP email</h3><span class="api-cat">Email</span></div></div>
+        <p class="api-desc">Transactional email is managed from the central Settings page so the saved credentials are the ones EmailService uses.</p>
+        <div class="api-badges"><span class="api-badge untested">Managed in Settings</span></div>
+        <div class="api-test">Save the provider details there, then send a real test email to verify inbox delivery.</div>
+        <div class="api-actions"><a class="button primary" href="settings.php#smtp-panel">Manage email</a></div>
+      </article>`;
       const c = conns[p.key], [st, label] = statusOf(c), configured = st !== 'not_configured', [catLabel, icon] = cat(p.category);
       const note = c?.last_tested_at ? `Tested ${esc(when(c.last_tested_at))}${c.last_test_message ? `: ${esc(c.last_test_message)}` : ''}` : configured ? 'This connection has not been tested yet.' : '';
       return `<article class="api-card">

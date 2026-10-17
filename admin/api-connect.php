@@ -20,7 +20,7 @@ admin_use_shared_layout('API Connect', $localPreview);
 <div class="page-heading"><div><h1>API Connect</h1><div class="breadcrumb"><span>Home</span><span>/</span><strong>API Connect</strong></div></div></div>
 
 <section class="panel operations-panel" aria-labelledby="api-summary-heading">
-  <div class="panel-heading operations-panel-heading"><div><h2 id="api-summary-heading">Connected services</h2><p class="panel-description">Connect payment providers, banks, crypto, email and other third-party services. Secret keys are stored on the server and are never shown again.</p></div></div>
+  <div class="panel-heading operations-panel-heading"><div><h2 id="api-summary-heading">Connected services</h2><p class="panel-description">Connect payment providers, banks, crypto, and other third-party services. Email delivery is managed centrally in Settings. Secret keys are stored on the server and are never shown again.</p></div></div>
   <div class="operation-metrics metrics-5">
     <article class="operation-metric"><span class="operation-icon"><i data-lucide="plug-zap" class="icon" aria-hidden="true"></i></span><span>Connected</span><strong id="api-connected">—</strong><small>Enabled and validated</small></article>
     <article class="operation-metric"><span class="operation-icon danger"><i data-lucide="circle-alert" class="icon" aria-hidden="true"></i></span><span>Needs attention</span><strong id="api-attention">—</strong><small>Last validation failed</small></article>

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/Money.php';require_once __DIR__.'/LedgerService.php';
+require_once __DIR__.'/AccountLimits.php';
 
 final class DepositService {
     public function __construct(private PDO $db) {}
@@ -12,6 +13,7 @@ final class DepositService {
         try {
             $q=$this->db->prepare("SELECT r.*,w.currency_code,w.available_balance FROM wallet_receiving_accounts r JOIN wallets w ON w.id=r.wallet_id WHERE r.provider=? AND r.account_number_hash=? AND r.currency_code=? AND r.status='active' FOR UPDATE");$q->execute([$provider,$hash,$currency]);$r=$q->fetch();
             if(!$r)throw new DomainException('Deposit destination could not be matched.');
+            (new AccountLimits($this->db))->incoming((int)$r['user_id'],(int)$r['wallet_id'],$currency,$amount,(string)$r['available_balance']);
             $q=$this->db->prepare('INSERT INTO gateway_deposit_events(provider,provider_reference,event_id,receiving_account_id,currency_code,amount,payload) VALUES(?,?,?,?,?,?,?)');$q->execute([$provider,$providerReference,$eventId?:null,$r['id'],$currency,$amount,json_encode($payload,JSON_THROW_ON_ERROR)]);$event=(int)$this->db->lastInsertId();
             $ref='DEP-'.strtoupper(bin2hex(random_bytes(10)));$key=hash('sha256','deposit|'.$provider.'|'.$providerReference);
             $this->db->prepare("INSERT INTO transactions(uuid,user_id,type,status,destination_wallet_id,currency_code,amount,fee_amount,reference,idempotency_key,provider,provider_reference,metadata,completed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,UTC_TIMESTAMP())")->execute([generateUUID(),$r['user_id'],'deposit','completed',$r['wallet_id'],$currency,$amount,'0',$ref,$key,$provider,$providerReference,json_encode(['channel'=>'provider_deposit','event_id'=>$eventId])]);$tx=(int)$this->db->lastInsertId();

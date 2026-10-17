@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/LedgerService.php';
 require_once __DIR__.'/PrivateStorage.php';
 require_once __DIR__.'/BankVerificationService.php';
+require_once __DIR__.'/AccountLimits.php';
 
 final class WalletOperations {
     private LedgerService $ledger;
@@ -73,6 +74,8 @@ final class WalletOperations {
             if($prior=$this->replay($idempotency,$hash)){ $this->db->commit(); return $prior; }
             $ids=[$uid,$dest];sort($ids,SORT_NUMERIC);$wallets=[];foreach($ids as $id)$wallets[$id]=$this->personal($id,$currency);
             $src=$wallets[$uid];$dst=$wallets[$dest];
+            (new AccountLimits($this->db))->outgoing($uid,'transfer',$currency,$amount);
+            (new AccountLimits($this->db))->incoming($dest,(int)$dst['id'],$currency,$amount,(string)$dst['available_balance']);
             if(Money::compare($src['available_balance'],$amount)<0)throw new DomainException('Insufficient wallet balance.');
             [$tx,$ref]=$this->createTransaction($uid,'transfer',$currency,$amount,(int)$src['id'],(int)$dst['id'],$idempotency,$hash,['channel'=>'internal','recipient_tag'=>$recipient,'note'=>mb_substr($note,0,191)],'completed');
             $this->ledger->post($tx,'internal:'.$tx,$currency,[[$this->ledger->wallet((int)$src['id'],$currency),'debit',$amount],[$this->ledger->wallet((int)$dst['id'],$currency),'credit',$amount]]);
@@ -102,6 +105,7 @@ final class WalletOperations {
             if($prior=$this->replay($idempotency,$hash)){ $this->db->commit();return $prior; }
             if($type==='bank')$dest=(new BankVerificationService($this->db))->verified($uid,(string)($destination['verification_token']??''),$dest['account_number'],$dest['bank_code']);
             $w=$this->personal($uid,$currency);if(Money::compare($w['available_balance'],$amount)<0)throw new DomainException('Insufficient wallet balance.');
+            (new AccountLimits($this->db))->outgoing($uid,'withdrawal',$currency,$amount);
             [$tx,$ref]=$this->createTransaction($uid,'withdrawal',$currency,$amount,(int)$w['id'],null,$idempotency,$hash,['channel'=>$type==='bank'?'bank_transfer':'crypto','destination_display'=>$display],'pending');
             $due=gmdate('Y-m-d H:i:s',time()+86400);
             $q=$this->db->prepare("INSERT INTO payout_requests(uuid,user_id,wallet_id,currency_code,amount,fee_amount,status,transaction_id,execution_mode,destination_type,destination_encrypted,destination_display,due_at) VALUES(?,?,?,?,?,0,'pending',?,'manual',?,?,?,?)");

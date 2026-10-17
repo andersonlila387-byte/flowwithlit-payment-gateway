@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../_admin.php';
+require_once __DIR__ . '/../../services/AccountLimits.php';
 
 header('Cache-Control: no-store');
 $input = adminMethod(['GET', 'POST']);
@@ -51,6 +52,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $wallet = $walletStatement->fetch();
         if (!$wallet) throw new RuntimeException('The selected wallet was not found.');
         if ($wallet['status'] !== 'active') throw new RuntimeException('Only an active wallet can receive a manual credit.');
+        (new AccountLimits($pdo))->incoming((int)$wallet['user_id'],(int)$wallet['id'],(string)$wallet['currency_code'],$amount,(string)$wallet['available_balance']);
 
         $duplicate = $pdo->prepare('SELECT id FROM manual_wallet_credits WHERE wallet_id=? AND external_reference=? LIMIT 1');
         $duplicate->execute([(int) $wallet['id'], $externalReference]);
