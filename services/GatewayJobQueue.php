@@ -9,10 +9,17 @@ final class GatewayJobQueue {
     public static function claim(PDO $db,string $worker):?array {
         $db->beginTransaction();
         try {
-            $q=$db->prepare("SELECT * FROM gateway_jobs WHERE status='queued' AND available_at<=UTC_TIMESTAMP(6) ORDER BY id LIMIT 1 FOR UPDATE SKIP LOCKED");$q->execute();$job=$q->fetch();
+            $q=$db->prepare("SELECT * FROM gateway_jobs WHERE status='queued' AND available_at<=UTC_TIMESTAMP(6) ORDER BY id LIMIT 1 FOR UPDATE");$q->execute();$job=$q->fetch();
             if(!$job){$db->commit();return null;}
             $db->prepare("UPDATE gateway_jobs SET status='running',attempts=attempts+1,locked_at=UTC_TIMESTAMP(6),locked_by=? WHERE id=?")->execute([$worker,$job['id']]);$db->commit();return $job;
         }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
+    }
+    /** Returns jobs whose worker died mid-run (lock older than $minutes) to the queue. */
+    public static function reclaimStale(PDO $db, int $minutes = 15): int {
+        $q = $db->prepare("UPDATE gateway_jobs SET status='queued', locked_at=NULL, locked_by=NULL
+                           WHERE status='running' AND locked_at < DATE_SUB(UTC_TIMESTAMP(6), INTERVAL ? MINUTE)");
+        $q->execute([$minutes]);
+        return $q->rowCount();
     }
     public static function complete(PDO $db,int $id):void{$db->prepare("UPDATE gateway_jobs SET status='completed',completed_at=UTC_TIMESTAMP(6),locked_at=NULL WHERE id=?")->execute([$id]);}
     public static function fail(PDO $db,int $id,string $error,int $attempts):void{$delay=min(3600,2 ** min($attempts,10));$db->prepare("UPDATE gateway_jobs SET status=IF(attempts>=12,'failed','queued'),available_at=DATE_ADD(UTC_TIMESTAMP(6),INTERVAL ? SECOND),last_error=?,locked_at=NULL WHERE id=?")->execute([$delay,mb_substr($error,0,500),$id]);}

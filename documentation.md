@@ -12,14 +12,14 @@ Flowwithlit addresses the fragmentation between traditional banking, digital mer
    * **Primary/Launch Partner:** **OnePipe** (Virtual account issuance, NGN collection, dynamic checkout accounts, bank verification, transfers).
    * **Long-Term Scaling Partner:** **PalmPay** (Deep payment infrastructure, low-cost switching, high-availability agency/merchant banking network).
 2. **Crypto Gateway (Zero Third-Party Fee Leakage):**
-   * Built on a **Self-Hosted Non-Custodial HD Wallet (BIP-44/BIP-32)** infrastructure managed by high-speed Go daemons.
+   * Built on a **Self-Hosted Non-Custodial HD Wallet (BIP-44/BIP-32)** infrastructure managed by PHP background workers.
    * Eliminates intermediary aggregator fees (e.g., NOWPayments, BitPay percentages) by listening directly to blockchain RPCs/Mempools, generating dynamic derivation addresses per invoice, and sweeping securely with configurable gas thresholds.
 
 ---
 
 ## 2. Technology Stack & Concurrency Architecture
 
-Flowwithlit uses a modular, decoupled architecture where **Pure/Modern Vanilla PHP (OOP MVC without Laravel)** handles 100% of web delivery, unified auth, mobile REST APIs, and merchant operations, while **Go (Golang)** runs autonomously as a background companion daemon, and **MySQL 8.0** provides ACID-compliant ledger storage with pessimistic row-locking.
+Flowwithlit uses a modular, decoupled architecture where **Pure/Modern Vanilla PHP (OOP MVC without Laravel)** handles 100% of web delivery, unified auth, mobile REST APIs, and merchant operations, while **PHP CLI workers** (cron-driven, one at a time) run background jobs on the same server, and **MySQL 8.0** provides ACID-compliant ledger storage with pessimistic row-locking.
 
 ### 2.1 Backend Concurrency & Unified API Gateway
 
@@ -40,7 +40,7 @@ Flowwithlit uses a modular, decoupled architecture where **Pure/Modern Vanilla P
                        ┌─────────────────────┴─────────────────────┐
                        ▼                                           ▼
             ┌─────────────────────┐                     ┌─────────────────────┐
-            │ MySQL 8.0 Database  │                     │  Go (Golang) Engine │
+            │ MySQL 8.0 Database  │                     │ PHP Worker (cron)   │
             │ (ACID Ledger Core)  │                     │ (Background Daemon) │
             └─────────────────────┘                     └──────────┬──────────┘
                                                                    │
@@ -65,7 +65,7 @@ Flowwithlit uses a modular, decoupled architecture where **Pure/Modern Vanilla P
   * **AI Customer Support:** Context-aware AI engine interacting with merchant/customer queries, transaction troubleshooting, and automated FAQ responses.
   * **Partner Integrations:** OnePipe API client, PalmPay integration bridge, bank payout queues.
 
-#### B. Go (Golang) Engine (High-Performance Daemon)
+#### B. PHP Background Worker (`cron/payment-worker.php`, same server)
 * **Responsibilities:**
   * **Crypto Watcher & Mempool Monitor:** Monitors Bitcoin (BTC), Ethereum/EVM (USDT ERC-20, ETH), TRON (USDT TRC-20), and Binance Smart Chain (USDT BEP-20) via direct RPC nodes / WebSockets.
   * **Address Generator:** Generates derivation addresses on the fly from a master extended public key (xPub) without exposing master private keys online.
@@ -97,9 +97,9 @@ Flowwithlit uses a modular, decoupled architecture where **Pure/Modern Vanilla P
   * They hold merchant custody and enforce withdrawal limits/minimums.
 * **Flowwithlit Clean Crypto Architecture:**
   * **Master Seed Offline:** Master private key / seed phrase is kept securely in cold storage / Vault HSM.
-  * **xPub in Go Daemon:** Go service holds only the `Extended Public Key (xPub)`.
+  * **xPub in the PHP worker:** The worker holds only the `Extended Public Key (xPub)`.
   * **Unique Address per Invoice:** For every crypto transaction, the system derives a child public address (BIP-44: `m/44'/60'/0'/0/i` for EVM, `m/44'/195'/0'/0/i` for TRON).
-  * **Direct Blockchain Monitoring:** Go monitors transfers directly to the derived address. Once confirmations reach threshold (e.g., 2 confirmations for BSC, 12 for ETH, 19 for TRON):
+  * **Direct Blockchain Monitoring:** The PHP worker monitors transfers directly to the derived address. Once confirmations reach threshold (e.g., 2 confirmations for BSC, 12 for ETH, 19 for TRON):
     1. Transaction is marked as `PAID`.
     2. Event is published to the MySQL ledger.
     3. Merchant webhook is fired immediately.
@@ -229,7 +229,7 @@ Key core tables designed for ACID reliability & row-locking:
 4. **Phase 4: User/Merchant Dashboard** (Virtual accounts overview, balances, Flow Tag hub, API keys).
 5. **Phase 5: Comprehensive e-Transfer Engine** (Flow Tag P2P, Bank NIP with Name Inquiry, Cross-site checkout).
 6. **Phase 6: Fiat Banking Rail** (OnePipe virtual account creation & webhook reception).
-7. **Phase 7: Clean Crypto Engine** (Go daemon for xPub derivation and multi-chain confirmations).
+7. **Phase 7: Clean Crypto Engine** (PHP worker for xPub derivation and multi-chain confirmations).
 8. **Phase 8: 24-Hour Settlement Scheduler** (Auto-release pipeline to corporate accounts).
 9. **Phase 9: AI Customer Support Agent** (Embedded support widget, contextual inquiry triage).
 10. **Phase 10: Super Admin Panel** (Full monitoring, KYC review, manual overrides).

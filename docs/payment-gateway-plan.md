@@ -6,13 +6,13 @@ Status: active implementation; not production ready. This plan preserves the ful
 
 PHP owns authentication, business authorization, provider adapters, credential decryption,
 money calculations, the double-entry ledger, and transactional state changes. MariaDB is
-the source of truth. Go owns durable webhook ingestion, leased background jobs, retries,
-reconciliation scheduling and WebSocket delivery. Workers call a signed internal PHP
-contract; they do not independently implement wallet balance changes.
+the source of truth. PHP also owns webhook ingestion (durable inbox), leased background
+jobs, retries and reconciliation through `cron/payment-worker.php`. The Go service was
+removed on 8 Nov 2026; there is one language and one server.
 
-Browser -> PHP checkout/user API -> transaction + job in MariaDB -> Go worker -> PHP
-provider adapter -> provider. Verified callbacks -> Go durable inbox -> PHP settlement
-transaction (ledger + wallet + payment + outbox) -> Go WebSocket/outbound merchant webhook.
+Browser -> PHP checkout/user API -> transaction + job in MariaDB -> PHP cron worker ->
+provider adapter -> provider. Verified callbacks -> PHP webhook inbox -> PHP worker
+settlement transaction (ledger + wallet + payment + outbox) -> status polling / merchant webhook.
 The browser may display confirmed DB state, never manufacture a successful payment.
 
 ## Acceptance matrix

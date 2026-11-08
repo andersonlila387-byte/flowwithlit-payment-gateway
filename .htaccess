@@ -3,7 +3,7 @@ RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 # Never serve server configuration, stored mail, or database scripts publicly.
-RewriteRule ^(?:storage|config|database|services|scratch|tests|go|docs)(?:/|$) - [F,L,NC]
+RewriteRule ^(?:storage|config|database|services|scratch|tests|cron|docs)(?:/|$) - [F,L,NC]
 RewriteRule (^|/)\.(?:env|git)(?:[./]|$) - [F,L,NC]
 
 # 0. Set DirectoryIndex to prioritize index.php

@@ -2,255 +2,224 @@
 $pageTitle = 'Flowwithlit — Pay, Swap & Transfer Money with Crypto & Naira';
 $pageDesc  = 'Flowwithlit is your all-in-one payment gateway. Pay with Crypto or Naira, convert currencies instantly, and send money fast with Flow Tags.';
 $activePage = 'home';
+$useTailwind = false; // the landing page uses its own production CSS, no Tailwind
+$extraHead = '  <link rel="stylesheet" href="assets/landing/landing.css?v=' . (int) @filemtime(__DIR__ . '/assets/landing/landing.css') . '" />' . "\n";
 require_once __DIR__ . '/includes/header.php';
+$extraScripts = '<script src="' . e(asset('assets/landing/landing.js')) . '" defer></script>';
+
+/**
+ * Section photo from images/landing/<name>.jpg (or .webp/.png). With no alt text it only reports
+ * whether the file exists, so a section falls back to a clean one-column layout until it is added.
+ */
+function landingImage(string $name, ?string $alt = null): string {
+    foreach (['webp', 'jpg', 'png'] as $ext) {
+        $path = 'images/landing/' . $name . '.' . $ext;
+        if (!is_file(__DIR__ . '/' . $path)) continue;
+        if ($alt === null) return $path;
+        [$w, $h] = @getimagesize(__DIR__ . '/' . $path) ?: [1456, 1088];
+        return '<figure class="media" data-reveal><img src="' . e($path) . '" alt="' . e($alt) . '" width="' . (int) $w . '" height="' . (int) $h . '" loading="lazy" decoding="async" /></figure>';
+    }
+    return '';
+}
 ?>
 
-  <!-- HERO -->
-  <section class="hero-bg relative min-h-[96vh] flex flex-col items-center justify-center text-center px-6 pt-32 pb-24">
-    <!-- Announcement Badge -->
-    <div class="reveal mb-6">
-      <span class="badge-pill">
-        <span class="badge-dot"></span> New — Instant Crypto &amp; Naira Swaps
-      </span>
-    </div>
-
-    <!-- Main Headline -->
-    <div class="max-w-4xl">
-      <h1 class="reveal text-white text-3xl sm:text-5xl md:text-[54px] font-semibold tracking-[-0.035em] leading-[1.12]">
-        Pay, swap &amp; transfer money<br />in Crypto and Naira
-      </h1>
-      <p class="reveal mt-5 text-white/85 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-normal leading-relaxed">
-        Flowwithlit is the all-in-one payment gateway for businesses. Accept Crypto and Naira payments seamlessly, convert Naira to Crypto or Crypto to Naira in seconds, send instant bank transfers, and collect payments with simple Flow Tags.
+<main>
+  <!-- Hero: centered over the background image -->
+  <section class="hero">
+    <div class="hero__bg" aria-hidden="true"></div>
+    <div class="container hero__inner">
+      <span class="pill" data-reveal><b>New</b> Instant Crypto &amp; Naira Swaps</span>
+      <h1 class="split">Pay, swap &amp; transfer money<br /> in Crypto and Naira</h1>
+      <p class="hero__text" data-reveal style="--d:350ms">Accept, swap and send Naira and crypto from one simple wallet.</p>
+      <div class="hero__ctas" data-reveal style="--d:480ms">
+        <a href="register" class="btn btn--gold"><span>Create free account</span><?= arrow() ?></a>
+        <a href="login" class="btn btn--glass"><span>Access your account</span><?= arrow() ?></a>
+      </div>
+      <p class="hero__note" data-reveal style="--d:600ms">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        No hidden fees · Naira and crypto in one wallet
       </p>
-      
-      <div class="reveal mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full max-w-xl mx-auto">
-        <!-- Button 1: Create Free Account (White BG + Dark Circle Arrow with Hover Effect) -->
-        <a href="register" class="group w-[90%] sm:w-64 h-13 py-2.5 inline-flex items-center justify-between bg-white hover:bg-[#eef4ff] transition-all duration-300 text-[#0b2545] text-sm font-semibold pl-6 pr-2 rounded-full shadow-lg shrink-0">
-          <span>Create Free Account</span>
-          <span class="w-8 h-8 rounded-full bg-[#0b2545] text-white flex items-center justify-center font-bold shrink-0 transition-transform duration-300 group-hover:scale-105">
-            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-          </span>
-        </a>
+    </div>
+    <span class="hero__scroll" aria-hidden="true"></span>
+  </section>
 
-        <!-- Button 2: Access Your Account -->
-        <a href="login" class="group w-[90%] sm:w-64 h-13 py-2.5 inline-flex items-center justify-between bg-white/10 hover:bg-white/20 transition text-white text-sm font-semibold pl-6 pr-2 rounded-full shadow-lg border border-white/20 shrink-0">
-          <span>Access Your Account</span>
-          <span class="w-8 h-8 rounded-full bg-white text-[#0b2545] flex items-center justify-center font-bold shrink-0">
-            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-          </span>
-        </a>
+  <!-- Supported assets marquee -->
+  <section class="marquee" aria-label="Supported currencies and payment methods">
+    <p class="marquee__label">One wallet for the money your customers already use</p>
+    <div class="marquee__track">
+      <?php for ($copy = 0; $copy < 2; $copy++): ?>
+      <div class="marquee__group"<?= $copy ? ' aria-hidden="true"' : '' ?>>
+        <span class="marquee__item"><span class="sym">₦</span>Naira</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><img src="logo/crypto/usdt.png" alt="" width="26" height="26" />USDT</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><img src="logo/crypto/btc.png" alt="" width="26" height="26" />Bitcoin</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><img src="logo/crypto/eth.png" alt="" width="26" height="26" />Ethereum</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><img src="logo/crypto/usdc.png" alt="" width="26" height="26" />USDC</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><span class="sym">@</span>Flow Tags</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><span class="sym">⇄</span>Bank transfers</span><span class="marquee__sep"></span>
+        <span class="marquee__item"><span class="sym">↗</span>Payment links</span><span class="marquee__sep"></span>
+      </div>
+      <?php endfor; ?>
+    </div>
+  </section>
+
+  <!-- Simple payments + stats -->
+  <section class="section">
+    <div class="container">
+      <span class="tag" data-reveal>Simple payments</span>
+      <p class="statement">Fast, easy money moves with no hidden fees.</p>
+      <div class="grid grid--3" data-stagger>
+        <article class="card stat" data-reveal>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></span>
+          <div class="stat__value">Instant</div>
+          <h3>Zero waiting time</h3>
+          <p>Swaps and transfers settle in real time.</p>
+        </article>
+        <article class="card stat" data-reveal>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div class="stat__value num" data-count="99.99" data-suffix="%">99.99%</div>
+          <h3>Platform uptime</h3>
+          <p>Always on, so your money keeps moving.</p>
+        </article>
+        <article class="card stat" data-reveal>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg></span>
+          <div class="stat__value">Multi-asset</div>
+          <h3>Crypto &amp; fiat</h3>
+          <p>USDT, BTC, ETH and Naira in one place.</p>
+        </article>
       </div>
     </div>
   </section>
 
-  <!-- STATS -->
-  <section class="py-20 sm:py-24 px-6 bg-white">
-    <div class="max-w-6xl mx-auto text-center">
-      <div class="reveal badge-pill mb-4">
-        <span class="badge-dot"></span> Simple payments
-      </div>
-      <h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Built for fast, easy money moves</h2>
-      <p class="reveal mt-3.5 text-ink/70 text-xs sm:text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-        No complicated steps or hidden fees. Flowwithlit makes sending, receiving, and swapping money simple for everyone.
-      </p>
-
-      <div class="mt-12 grid md:grid-cols-3 gap-6 text-left">
-        <!-- Stat Card 1: Processing Speed -->
-        <div class="reveal bg-mint border border-brand-500/10 rounded-3xl p-7 sm:p-8 transition hover:shadow-card">
-          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#0b2545] shadow-sm mb-10 font-bold">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+  <!-- Features -->
+  <section class="section section--surface" id="features">
+    <div class="container">
+      <span class="tag" data-reveal>Full payment suite</span>
+      <h2 class="heading" data-reveal>Everything you need to pay &amp; get paid</h2>
+      <div class="media-row<?= landingImage('merchant') ? '' : ' media-row--solo' ?>">
+        <?= landingImage('merchant', 'Business owner receiving a payment on her phone') ?>
+        <div class="rows" data-stagger>
+          <div class="row-item" data-reveal>
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg></span>
+            <div><h3>Instant Crypto &amp; Naira swaps</h3><p>Naira to USDT, BTC or ETH and back, at live rates.</p></div>
           </div>
-          <div class="text-3xl sm:text-4xl font-bold text-ink tracking-tight">Instant</div>
-          <div class="font-bold text-ink text-sm sm:text-base mt-2">Zero Waiting Time</div>
-          <div class="text-ink/60 text-xs sm:text-sm mt-1 leading-relaxed">Swaps and transfers settle in real-time on your dashboard.</div>
-        </div>
-
-        <!-- Stat Card 2: Uptime & Reliability -->
-        <div class="reveal bg-mint border border-brand-500/10 rounded-3xl p-7 sm:p-8 transition hover:shadow-card">
-          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#0b2545] shadow-sm mb-10 font-bold">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <div class="row-item" data-reveal>
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.9 7.9"/></svg></span>
+            <div><h3>Simple Flow Tags</h3><p>Get paid with a handle like <code>@alex</code>, no account numbers.</p></div>
           </div>
-          <div class="text-3xl sm:text-4xl font-bold text-ink tracking-tight">99.99%</div>
-          <div class="font-bold text-ink text-sm sm:text-base mt-2">Platform Uptime</div>
-          <div class="text-ink/60 text-xs sm:text-sm mt-1 leading-relaxed">Always online so your money is always moving smoothly.</div>
-        </div>
-
-        <!-- Stat Card 3: Supported Currencies & Methods -->
-        <div class="reveal bg-mint border border-brand-500/10 rounded-3xl p-7 sm:p-8 transition hover:shadow-card">
-          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#0b2545] shadow-sm mb-10 font-bold">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+          <div class="row-item" data-reveal>
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg></span>
+            <div><h3>E-commerce plugins</h3><p>Connect WooCommerce, Shopify or your own site in minutes.</p></div>
           </div>
-          <div class="text-3xl sm:text-4xl font-bold text-ink tracking-tight">Multi-Asset</div>
-          <div class="font-bold text-ink text-sm sm:text-base mt-2">Crypto &amp; Fiat</div>
-          <div class="text-ink/60 text-xs sm:text-sm mt-1 leading-relaxed">Support for USDT, BTC, ETH, Naira bank accounts &amp; e-Transfers.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="features" class="py-20 sm:py-24 px-6 bg-slate-50 border-t border-slate-100">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <div class="reveal badge-pill mb-4">
-          <span class="badge-dot"></span> Full payment suite
-        </div>
-        <h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Everything you need to pay &amp; get paid</h2>
-        <p class="reveal mt-3.5 text-ink/70 text-xs sm:text-sm md:text-base leading-relaxed">
-          From individual money transfers to full merchant payment gateways, Flowwithlit empowers your financial freedom.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
-        <!-- Feature 1: Crypto & Naira Swaps -->
-        <div class="reveal bg-white border border-brand-500/10 rounded-3xl p-8 transition hover:shadow-card">
-          <div class="w-12 h-12 rounded-2xl bg-mint text-[#0b2545] flex items-center justify-center font-bold mb-6">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/></svg>
+          <div class="row-item" data-reveal>
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="1.5" y="4" width="21" height="16" rx="2.5"/><path d="M1.5 10h21"/></svg></span>
+            <div><h3>Fast payouts</h3><p>Withdraw to any Nigerian bank or crypto wallet.</p></div>
           </div>
-          <h3 class="text-xl font-bold text-ink">Instant Crypto &amp; Naira Swaps</h3>
-          <p class="text-ink/70 text-xs sm:text-sm mt-2 leading-relaxed">
-            Convert Naira directly to USDT, BTC, or ETH, or swap your Crypto back to Naira instantly at competitive real-time market rates.
-          </p>
-        </div>
-
-        <!-- Feature 2: Flow Tags -->
-        <div class="reveal bg-white border border-brand-500/10 rounded-3xl p-8 transition hover:shadow-card">
-          <div class="w-12 h-12 rounded-2xl bg-mint text-[#0b2545] flex items-center justify-center font-bold mb-6">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/></svg>
-          </div>
-          <h3 class="text-xl font-bold text-ink">Simple Flow Tags (@handle)</h3>
-          <p class="text-ink/70 text-xs sm:text-sm mt-2 leading-relaxed">
-            Send and receive payments using memorable handles like <span class="font-mono text-[#0b2545] font-bold">@alex</span>. No long account numbers needed.
-          </p>
-        </div>
-
-        <!-- Feature 3: Merchant E-Commerce Plugins -->
-        <div class="reveal bg-white border border-brand-500/10 rounded-3xl p-8 transition hover:shadow-card">
-          <div class="w-12 h-12 rounded-2xl bg-mint text-[#0b2545] flex items-center justify-center font-bold mb-6">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-          </div>
-          <h3 class="text-xl font-bold text-ink">Ready-Made E-Commerce Plugins</h3>
-          <p class="text-ink/70 text-xs sm:text-sm mt-2 leading-relaxed">
-            Connect Flowwithlit to WooCommerce, Shopify, Wix, or custom sites in minutes with ready plugins and SDKs.
-          </p>
-        </div>
-
-        <!-- Feature 4: E-Transfers & Bank Wire -->
-        <div class="reveal bg-white border border-brand-500/10 rounded-3xl p-8 transition hover:shadow-card">
-          <div class="w-12 h-12 rounded-2xl bg-mint text-[#0b2545] flex items-center justify-center font-bold mb-6">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-          </div>
-          <h3 class="text-xl font-bold text-ink">Fast E-Transfers &amp; Payouts</h3>
-          <p class="text-ink/70 text-xs sm:text-sm mt-2 leading-relaxed">
-            Withdraw funds directly to any Nigerian bank account or crypto wallet with sub-minute confirmation times.
-          </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW IT WORKS -->
-  <section id="how-it-works" class="py-20 sm:py-24 px-6 bg-white border-t border-slate-100">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center max-w-2xl mx-auto mb-14">
-        <div class="reveal badge-pill mb-4"><span class="badge-dot"></span> Made for momentum</div>
-        <h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Move money in three simple steps</h2>
-        <p class="reveal mt-3.5 text-ink/70 text-xs sm:text-sm md:text-base leading-relaxed">Whether you are paying, collecting, or converting, every Flowwithlit transaction starts with the same simple flow.</p>
+  <!-- How it works -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <span class="tag" data-reveal>Made for momentum</span>
+      <h2 class="heading" data-reveal>Move money in three simple steps</h2>
+            <div class="grid grid--3 steps" data-stagger>
+        <div class="steps__line" aria-hidden="true"><i></i></div>
+        <article class="card step" data-reveal><span class="step__n">01</span><h3>Create your account</h3><p>Sign up in minutes.</p></article>
+        <article class="card step" data-reveal><span class="step__n">02</span><h3>Choose how to move</h3><p>Send, receive, swap or share your Flow Tag.</p></article>
+        <article class="card step" data-reveal><span class="step__n">03</span><h3>Track it instantly</h3><p>Every payment, live in one dashboard.</p></article>
       </div>
-      <div class="grid md:grid-cols-3 gap-6 relative">
-        <div class="hidden md:block absolute top-11 left-[18%] right-[18%] border-t-2 border-dashed border-brand-500/20"></div>
-        <div class="reveal relative bg-slate-50 border border-brand-500/10 rounded-3xl p-7 sm:p-8 text-center"><div class="w-14 h-14 mx-auto rounded-full bg-[#0b2545] text-white flex items-center justify-center text-xl font-bold mb-6 shadow-lg">01</div><h3 class="text-xl font-bold text-ink">Create your account</h3><p class="mt-2 text-ink/70 text-xs sm:text-sm leading-relaxed">Get started in minutes with a secure Flowwithlit account built around you or your business.</p></div>
-        <div class="reveal relative bg-slate-50 border border-brand-500/10 rounded-3xl p-7 sm:p-8 text-center"><div class="w-14 h-14 mx-auto rounded-full bg-[#0b2545] text-white flex items-center justify-center text-xl font-bold mb-6 shadow-lg">02</div><h3 class="text-xl font-bold text-ink">Choose how to move</h3><p class="mt-2 text-ink/70 text-xs sm:text-sm leading-relaxed">Send Naira, accept crypto, swap assets, or share a Flow Tag to request payment.</p></div>
-        <div class="reveal relative bg-slate-50 border border-brand-500/10 rounded-3xl p-7 sm:p-8 text-center"><div class="w-14 h-14 mx-auto rounded-full bg-[#0b2545] text-white flex items-center justify-center text-xl font-bold mb-6 shadow-lg">03</div><h3 class="text-xl font-bold text-ink">Track it instantly</h3><p class="mt-2 text-ink/70 text-xs sm:text-sm leading-relaxed">See every transaction, balance, and payout in one clear real-time dashboard.</p></div>
-      </div>
+      <a href="register" class="btn btn--navy section-cta" data-reveal><span>Get started</span><?= arrow() ?></a>
     </div>
   </section>
 
-  <!-- PAYMENT METHODS -->
-  <section class="py-20 sm:py-24 px-6 bg-[#0b2545] text-white overflow-hidden">
-    <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-      <div><div class="reveal inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-xs mb-5"><span class="w-2 h-2 rounded-full bg-blue-300"></span> One wallet, more ways to pay</div><h2 class="reveal text-3xl sm:text-4xl md:text-[42px] font-bold tracking-[-0.03em] leading-tight">Every payment method your customers expect</h2><p class="reveal mt-4 text-white/70 text-sm sm:text-base leading-relaxed max-w-xl">Accept the value your customers already hold, then settle and manage it from one reliable place.</p><a href="register" class="reveal mt-7 inline-flex items-center gap-3 bg-white hover:bg-[#eef4ff] text-[#0b2545] text-sm font-bold py-3 pl-5 pr-3 rounded-full transition"><span>Start accepting payments</span><span class="w-7 h-7 rounded-full bg-[#0b2545] text-white flex items-center justify-center">→</span></a></div>
-      <div class="grid sm:grid-cols-2 gap-4"><div class="reveal bg-white/10 border border-white/15 rounded-2xl p-6"><div class="w-10 h-10 rounded-xl bg-white text-[#0b2545] flex items-center justify-center text-lg font-bold">₦</div><h3 class="mt-5 text-xl font-bold">Naira transfers</h3><p class="mt-1 text-white/65 text-xs sm:text-sm">Send, receive, and settle to Nigerian bank accounts.</p></div><div class="reveal bg-white/10 border border-white/15 rounded-2xl p-6"><div class="w-10 h-10 rounded-xl bg-blue-300 text-[#0b2545] flex items-center justify-center text-sm font-bold">₿</div><h3 class="mt-5 text-xl font-bold">Crypto payments</h3><p class="mt-1 text-white/65 text-xs sm:text-sm">Accept digital assets with transparent conversion.</p></div><div class="reveal bg-white/10 border border-white/15 rounded-2xl p-6"><div class="w-10 h-10 rounded-xl bg-emerald-200 text-[#0b2545] flex items-center justify-center text-lg font-bold">@</div><h3 class="mt-5 text-xl font-bold">Flow Tags</h3><p class="mt-1 text-white/65 text-xs sm:text-sm">Get paid through a simple, memorable handle.</p></div><div class="reveal bg-white/10 border border-white/15 rounded-2xl p-6"><div class="w-10 h-10 rounded-xl bg-violet-200 text-[#0b2545] flex items-center justify-center text-lg font-bold">↔</div><h3 class="mt-5 text-xl font-bold">Instant swaps</h3><p class="mt-1 text-white/65 text-xs sm:text-sm">Move between Naira and crypto when you need to.</p></div></div>
+  <!-- Payment methods -->
+  <section class="section section--navy">
+    <div class="container">
+      <span class="tag" data-reveal>One wallet, more ways to pay</span>
+      <h2 class="heading" data-reveal>Every payment method your customers expect</h2>
+            <div class="grid grid--4" data-stagger>
+        <article class="method" data-reveal><span class="method__sym">₦</span><h3>Naira transfers</h3><p>Send and settle to any Nigerian bank.</p></article>
+        <article class="method" data-reveal><span class="method__sym">₿</span><h3>Crypto payments</h3><p>Accept USDT, BTC and more.</p></article>
+        <article class="method" data-reveal><span class="method__sym">@</span><h3>Flow Tags</h3><p>Get paid with a simple handle.</p></article>
+        <article class="method" data-reveal><span class="method__sym">⇄</span><h3>Instant swaps</h3><p>Naira to crypto and back.</p></article>
+      </div>
+      <a href="register" class="btn btn--gold section-cta" data-reveal><span>Start accepting payments</span><?= arrow() ?></a>
     </div>
   </section>
 
-  <!-- BUSINESS INTEGRATIONS -->
-  <section class="py-20 sm:py-24 px-6 bg-slate-50 border-t border-slate-100"><div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center"><div class="reveal grid grid-cols-2 gap-4 order-2 lg:order-1"><div class="bg-white rounded-2xl border border-brand-500/10 p-6 shadow-sm"><div class="text-2xl font-bold text-ink">API</div><p class="mt-2 text-xs text-ink/60">Build a custom payment experience.</p></div><div class="bg-[#0b2545] text-white rounded-2xl p-6 mt-7"><div class="text-2xl font-bold">Plugins</div><p class="mt-2 text-xs text-white/65">Connect your store in minutes.</p></div><div class="bg-[#d9e6ff] rounded-2xl p-6 -mt-7"><div class="text-2xl font-bold text-ink">Links</div><p class="mt-2 text-xs text-ink/60">Share a payment link anywhere.</p></div><div class="bg-white rounded-2xl border border-brand-500/10 p-6 shadow-sm"><div class="text-2xl font-bold text-ink">Payouts</div><p class="mt-2 text-xs text-ink/60">Pay customers and teams fast.</p></div></div><div class="order-1 lg:order-2"><div class="reveal badge-pill mb-4"><span class="badge-dot"></span> Built for businesses</div><h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Payments that fit how your business works</h2><p class="reveal mt-4 text-ink/70 text-sm sm:text-base leading-relaxed">From a payment link in your bio to a complete checkout integration, Flowwithlit gives you flexible ways to collect and manage payments.</p><ul class="reveal mt-6 space-y-3 text-sm text-ink/80"><li class="flex gap-3"><span class="font-bold">✓</span> Developer-friendly APIs for tailored checkout flows</li><li class="flex gap-3"><span class="font-bold">✓</span> Store plugins for faster integration</li><li class="flex gap-3"><span class="font-bold">✓</span> Payment links and business payouts from one dashboard</li></ul><a href="developers" class="reveal inline-block mt-7 text-sm font-bold text-[#0b2545] border-b-2 border-[#0b2545] pb-1 hover:text-blue-700 hover:border-blue-700 transition">Explore developer tools →</a></div></div></section>
+  <!-- Business tools -->
+  <section class="section section--surface" id="integrations-section">
+    <div class="container media-row media-row--flip<?= landingImage('seller') ? '' : ' media-row--solo' ?>">
+      <div class="media-row__text">
+        <span class="tag" data-reveal>Built for businesses</span>
+        <h2 class="heading" data-reveal>Payments that fit how your business works</h2>
+        <p class="lede" data-reveal>Payment links, checkout, plugins and payouts in one dashboard.</p>
+        <ul class="checks" data-reveal>
+          <li>Developer-friendly APIs</li>
+          <li>Store plugins</li>
+          <li>Payment links and payouts</li>
+        </ul>
+        <a href="developers" class="link-arrow" data-reveal>Explore developer tools <span aria-hidden="true">→</span></a>
+      </div>
+      <?= landingImage('seller', 'Online store owner packing customer orders beside a laptop') ?>
+    </div>
+  </section>
 
-  <!-- SECURITY -->
-  <section class="py-20 sm:py-24 px-6 bg-white border-t border-slate-100"><div class="max-w-6xl mx-auto"><div class="text-center max-w-2xl mx-auto mb-12"><div class="reveal badge-pill mb-4"><span class="badge-dot"></span> Safety by design</div><h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Secure payments, clear controls</h2><p class="reveal mt-3.5 text-ink/70 text-sm sm:text-base leading-relaxed">Your money and information deserve strong protection at every step.</p></div><div class="grid md:grid-cols-3 gap-6"><div class="reveal border border-brand-500/10 rounded-3xl p-7"><div class="w-11 h-11 rounded-2xl bg-mint flex items-center justify-center text-xl">⌁</div><h3 class="mt-5 text-xl font-bold text-ink">Protected data</h3><p class="mt-2 text-xs sm:text-sm text-ink/65 leading-relaxed">Sensitive information is handled with encryption and secure practices.</p></div><div class="reveal border border-brand-500/10 rounded-3xl p-7"><div class="w-11 h-11 rounded-2xl bg-mint flex items-center justify-center text-xl">✓</div><h3 class="mt-5 text-xl font-bold text-ink">Verified access</h3><p class="mt-2 text-xs sm:text-sm text-ink/65 leading-relaxed">Account checks and authentication help keep access in the right hands.</p></div><div class="reveal border border-brand-500/10 rounded-3xl p-7"><div class="w-11 h-11 rounded-2xl bg-mint flex items-center justify-center text-xl">◉</div><h3 class="mt-5 text-xl font-bold text-ink">Always visible</h3><p class="mt-2 text-xs sm:text-sm text-ink/65 leading-relaxed">Keep an eye on your balances and transaction activity in real time.</p></div></div></div></section>
-
-  <!-- TESTIMONIALS -->
-  <section class="py-20 sm:py-24 px-6 bg-slate-50 border-t border-slate-100"><div class="max-w-6xl mx-auto"><div class="text-center max-w-2xl mx-auto mb-12"><div class="reveal badge-pill mb-4"><span class="badge-dot"></span> Growing with our users</div><h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Built for everyday money movement</h2></div><div class="grid md:grid-cols-3 gap-6"><figure class="reveal bg-white rounded-3xl border border-brand-500/10 p-7 shadow-sm"><div class="text-[#0b2545] tracking-[0.18em] text-sm">★★★★★</div><blockquote class="mt-5 text-lg leading-relaxed text-ink font-semibold">“The Flow Tag makes collecting payments from clients feel effortless.”</blockquote><figcaption class="mt-6 flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-[#d9e6ff] flex items-center justify-center font-bold">AO</span><span><strong class="block text-sm">Ada O.</strong><small class="text-xs text-ink/55">Creative business owner</small></span></figcaption></figure><figure class="reveal bg-[#0b2545] text-white rounded-3xl p-7 shadow-lg"><div class="text-blue-300 tracking-[0.18em] text-sm">★★★★★</div><blockquote class="mt-5 text-lg leading-relaxed font-semibold">“It gives our customers more ways to pay without making checkout complicated.”</blockquote><figcaption class="mt-6 flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center font-bold">TM</span><span><strong class="block text-sm">Tomi M.</strong><small class="text-xs text-white/60">Online store operator</small></span></figcaption></figure><figure class="reveal bg-white rounded-3xl border border-brand-500/10 p-7 shadow-sm"><div class="text-[#0b2545] tracking-[0.18em] text-sm">★★★★★</div><blockquote class="mt-5 text-lg leading-relaxed text-ink font-semibold">“The dashboard is simple, fast, and lets me see every payment at a glance.”</blockquote><figcaption class="mt-6 flex items-center gap-3"><span class="w-10 h-10 rounded-full bg-[#d9e6ff] flex items-center justify-center font-bold">KS</span><span><strong class="block text-sm">Kunle S.</strong><small class="text-xs text-ink/55">Independent consultant</small></span></figcaption></figure></div></div></section>
-
-  <!-- FAQ SECTION -->
-  <section id="faq" class="py-20 sm:py-24 px-6 bg-white border-t border-slate-100">
-    <div class="max-w-4xl mx-auto">
-      <div class="text-center mb-12">
-        <div class="reveal badge-pill mb-4">
-          <span class="badge-dot"></span> Common Questions
+  <!-- Security -->
+  <section class="section" id="security">
+    <div class="container media-row<?= landingImage('security') ? '' : ' media-row--solo' ?>">
+      <?= landingImage('security', 'Navy shield with a gold padlock') ?>
+      <div class="media-row__text">
+        <span class="tag" data-reveal>Safety by design</span>
+        <h2 class="heading" data-reveal>Secure payments, clear controls</h2>
+        <div class="rows" data-stagger>
+          <div class="row-item" data-reveal><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></span><div><h3>Protected data</h3><p>Encrypted and handled securely.</p></div></div>
+          <div class="row-item" data-reveal><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span><div><h3>Verified access</h3><p>Two-factor sign-in and account checks.</p></div></div>
+          <div class="row-item" data-reveal><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><h3>Always visible</h3><p>Every balance and transaction, live.</p></div></div>
         </div>
-        <h2 class="reveal text-2xl sm:text-3xl md:text-[38px] font-bold tracking-[-0.03em] leading-tight text-ink">Frequently Asked Questions</h2>
-      </div>
-
-      <div class="divide-y divide-slate-200" id="faq-container">
-        <!-- FAQ Item 1 -->
-        <details class="group py-5" open>
-          <summary class="flex items-center justify-between cursor-pointer list-none select-none">
-            <span class="font-semibold text-ink text-base sm:text-lg tracking-tight">How fast is Naira to Crypto conversion?</span>
-            <span class="w-8 h-8 rounded-full bg-[#0b2545] text-white flex items-center justify-center font-medium text-lg shrink-0">
-              <span class="group-open:hidden">+</span>
-              <span class="hidden group-open:inline">&minus;</span>
-            </span>
-          </summary>
-          <p class="mt-3 text-ink/70 text-xs sm:text-sm leading-relaxed max-w-2xl">
-            It happens instantly! As soon as you confirm your swap, your currency is converted and updated in your wallet balance right away.
-          </p>
-        </details>
-
-        <!-- FAQ Item 2 -->
-        <details class="group py-5">
-          <summary class="flex items-center justify-between cursor-pointer list-none select-none">
-            <span class="font-semibold text-ink text-base sm:text-lg tracking-tight">What is a Flow Tag?</span>
-            <span class="w-8 h-8 rounded-full bg-[#0b2545] text-white flex items-center justify-center font-medium text-lg shrink-0">
-              <span class="group-open:hidden">+</span>
-              <span class="hidden group-open:inline">&minus;</span>
-            </span>
-          </summary>
-          <p class="mt-3 text-ink/70 text-xs sm:text-sm leading-relaxed max-w-2xl">
-            Flow Tag is your personal handle (like @yourname). It lets anyone send you money instantly without typing long bank account numbers or crypto addresses.
-          </p>
-        </details>
-
-        <!-- FAQ Item 3 -->
-        <details class="group py-5">
-          <summary class="flex items-center justify-between cursor-pointer list-none select-none">
-            <span class="font-semibold text-ink text-base sm:text-lg tracking-tight">Can I accept payments on my online store?</span>
-            <span class="w-8 h-8 rounded-full bg-[#0b2545] text-white flex items-center justify-center font-medium text-lg shrink-0">
-              <span class="group-open:hidden">+</span>
-              <span class="hidden group-open:inline">&minus;</span>
-            </span>
-          </summary>
-          <p class="mt-3 text-ink/70 text-xs sm:text-sm leading-relaxed max-w-2xl">
-            Yes! Flowwithlit offers simple plugins for Shopify, WooCommerce, and WordPress, as well as easy developer APIs for custom sites.
-          </p>
-        </details>
-
-        <!-- FAQ Item 4 -->
-        <details class="group py-5">
-          <summary class="flex items-center justify-between cursor-pointer list-none select-none">
-            <span class="font-semibold text-ink text-base sm:text-lg tracking-tight">Is my money safe on Flowwithlit?</span>
-            <span class="w-8 h-8 rounded-full bg-[#0b2545] text-white flex items-center justify-center font-medium text-lg shrink-0">
-              <span class="group-open:hidden">+</span>
-              <span class="hidden group-open:inline">&minus;</span>
-            </span>
-          </summary>
-          <p class="mt-3 text-ink/70 text-xs sm:text-sm leading-relaxed max-w-2xl">
-            Yes! We use bank-grade security, top-level encryption, and strict protection protocols to ensure your money and data stay 100% safe.
-          </p>
-        </details>
       </div>
     </div>
   </section>
+
+  <!-- Testimonials -->
+  <section class="section section--surface">
+    <div class="container">
+      <span class="tag" data-reveal>Growing with our users</span>
+      <h2 class="heading" data-reveal>Built for everyday money movement</h2>
+      <div class="grid grid--3 quotes" data-stagger>
+        <figure class="card quote" data-reveal><div><div class="stars" aria-label="5 out of 5">★★★★★</div><blockquote>“The Flow Tag makes collecting payments from clients feel effortless.”</blockquote></div><figcaption class="who"><span class="avatar">AO</span><span><strong>Ada O.</strong><small>Creative business owner</small></span></figcaption></figure>
+        <figure class="card quote quote--navy" data-reveal><div><div class="stars" aria-label="5 out of 5">★★★★★</div><blockquote>“It gives our customers more ways to pay without making checkout complicated.”</blockquote></div><figcaption class="who"><span class="avatar">TM</span><span><strong>Tomi M.</strong><small>Online store operator</small></span></figcaption></figure>
+        <figure class="card quote" data-reveal><div><div class="stars" aria-label="5 out of 5">★★★★★</div><blockquote>“The dashboard is simple, fast, and lets me see every payment at a glance.”</blockquote></div><figcaption class="who"><span class="avatar">KS</span><span><strong>Kunle S.</strong><small>Independent consultant</small></span></figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <span class="tag" data-reveal>Common questions</span>
+      <h2 class="heading" data-reveal>Frequently asked questions</h2>
+      <div class="faq" data-reveal>
+        <?php
+        $faqs = [
+            ['How fast is Naira to Crypto conversion?', 'It happens instantly! As soon as you confirm your swap, your currency is converted and updated in your wallet balance right away.'],
+            ['What is a Flow Tag?', 'Flow Tag is your personal handle (like @yourname). It lets anyone send you money instantly without typing long bank account numbers or crypto addresses.'],
+            ['Can I accept payments on my online store?', 'Yes! Flowwithlit offers simple plugins for Shopify, WooCommerce, and WordPress, as well as easy developer APIs for custom sites.'],
+            ['Is my money safe on Flowwithlit?', 'Yes! We use bank-grade security, top-level encryption, and strict protection protocols to ensure your money and data stay 100% safe.'],
+        ];
+        foreach ($faqs as $i => [$question, $answer]): ?>
+        <div class="faq__item<?= $i === 0 ? ' open' : '' ?>">
+          <button class="faq__q" aria-expanded="<?= $i === 0 ? 'true' : 'false' ?>" aria-controls="faq-<?= $i ?>"><span><?= e($question) ?></span><span class="faq__plus" aria-hidden="true"></span></button>
+          <div class="faq__a" id="faq-<?= $i ?>" role="region"><div><p><?= e($answer) ?></p></div></div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <p class="faq-contact" data-reveal>Can’t find what you need? <a href="contact">Contact our team</a></p>
+    </div>
+  </section>
+
+</main>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

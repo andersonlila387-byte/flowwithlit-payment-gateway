@@ -2,7 +2,7 @@
 
 ## Decision and launch boundary
 
-For the first launch, PHP is the only authoritative payment processor. The Go service remains available for later work, but it must not run a payment worker or receive live provider callbacks while PHP owns payment state.
+PHP is the only payment processor. The Go service was removed on 8 Nov 2026; its webhook intake, job runner and expiry loop now live in `api/webhooks/breet.php` and `cron/payment-worker.php`. Everything runs on one server.
 
 This plan does not claim that a payment system can be made hack-proof. Its goal is to reduce risk with verified provider events, one authoritative write path, least-privilege secrets, auditability, and launch tests.
 
@@ -83,7 +83,7 @@ Keep `api/checkout/payment-status.php` as the temporary real-time mechanism.
 - Use least-privilege database credentials, restricted file permissions, and separate admin/session identities.
 - Log request IDs, provider references, result codes, and safe error classes. Never log API secrets, bearer tokens, full account numbers, card data, or raw credentials.
 - Rate-limit checkout creation, status polling, login, and webhook ingress; add WAF rules appropriate to the hosting plan.
-- Keep the Go service disabled while PHP cron is active so two workers cannot update the same payment records.
+- Only one payment worker may run at a time; `cron/payment-worker.php` enforces this with a MySQL `GET_LOCK`.
 
 ## Required provider inputs before live enablement
 
@@ -129,4 +129,4 @@ Do not enable live OnePipe payments until every item below passes:
 - [ ] Checkout status polling is rate-limited and user-safe.
 - [ ] Database migrations are backed up, applied, and verified.
 - [ ] Load test results fit the expected launch peak or the launch is throttled to a safe cohort.
-- [ ] Go payment worker is disabled while PHP is authoritative.
+- [x] Go service removed; PHP is the only payment worker.
