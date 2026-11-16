@@ -71,6 +71,7 @@ if (!function_exists('admin_component_escape')) {
             ['Promo Code', 'percent', 'promo-codes.php', false],
             ['Levels', 'levels', 'levels.php', false],
             ['API Connect', 'api', 'api-connect.php', false],
+            ['Countries', 'globe', 'countries.php', false],
             ['Settings', 'settings', 'settings.php', false],
             ['Reports', 'report', 'reports.php', false],
             ['Faq', 'help', 'faq.php', false],

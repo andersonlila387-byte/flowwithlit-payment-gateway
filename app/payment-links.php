@@ -19,11 +19,7 @@ require_once __DIR__ . '/includes/sidebar.php';
       <!-- Top Title & Quick Action Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
         <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-gray-400 font-medium tracking-wide">Merchant &amp; Invoicing</span>
-            <span id="activeCollectsBadge" class="text-[11px] font-bold text-sky-700 bg-sky-50 border border-sky-200/50 px-2 py-0.5 rounded-full">0 Active Collects</span>
-          </div>
-          <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight mt-0.5">Payment Links &amp; Invoices</h1>
+          <h1 class="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">Payment Links &amp; Invoices</h1>
         </div>
 
         <!-- Action buttons -->

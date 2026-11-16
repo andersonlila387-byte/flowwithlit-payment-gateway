@@ -41,6 +41,6 @@ admin_use_shared_layout('Users', $localPreview, [
 <aside id="identity-drawer" class="identity-drawer" aria-labelledby="identity-drawer-title" aria-hidden="true"><header><div><p>Identity review</p><h2 id="identity-drawer-title">Loading…</h2></div><button id="close-identity-drawer" type="button" aria-label="Close identity review"><i data-lucide="x" class="icon" aria-hidden="true"></i></button></header><div id="identity-drawer-content" class="identity-drawer-content"></div></aside>
 <div id="toast" class="toast" role="status" hidden></div>
 <script>window.dashboardConfig=<?= json_encode(['localPreview'=>$localPreview,'apiBase'=>$adminApiBase], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;</script>
-<script src="assets/dashboard.js?v=5"></script><script src="assets/identity.js?v=1"></script>
+<script src="assets/dashboard.js?v=5"></script><script src="assets/identity.js?v=3"></script>
 </body></html>
 

@@ -3,6 +3,24 @@
  * Flowwithlit Registration Page
  * Clean 2-column split design with top back-arrow icon on Step 2.
  */
+require_once __DIR__ . '/config/environment.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/config/countries.php';
+// Google sign-up shows only when a Google OAuth client ID is configured (first entry is the web client).
+$googleClientId = trim(explode(',', (string) (getenv('FLOW_GOOGLE_CLIENT_ID') ?: ''))[0]);
+
+// Country list and phone codes are managed in Admin → Countries.
+try {
+    $signupPdo = Database::getInstance();
+    $signupCountries = approvedCountries($signupPdo);
+    $signupDialCodes = phoneDialCodes($signupPdo);
+} catch (Throwable $e) {
+    $signupCountries = FWL_FALLBACK_COUNTRIES;
+    $signupDialCodes = ['+234'];
+}
+$defaultDialCode = $signupCountries[0]['dial_code'] ?? '+234';
+$h = static fn ($v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+
 $pageTitle = 'Create Account — Flowwithlit';
 $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & Naira, transfer funds, and integrate SDKs.';
 ?>
@@ -25,14 +43,15 @@ $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Smooch+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: { 
-            sans: ['"Smooch Sans"', 'sans-serif'],
+            sans: ['Satoshi', 'system-ui', 'sans-serif'],
             mono: ['"IBM Plex Mono"', 'monospace']
           },
           colors: {
@@ -53,36 +72,53 @@ $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & 
   
   <style>
     html {
-      font-size: 17px;
+      font-size: 16px;
     }
     body { 
-      font-family: 'Smooch Sans', sans-serif; 
-      font-weight: 600;
-      letter-spacing: 0.025em;
+      font-family: 'Satoshi', system-ui, sans-serif; 
+      font-weight: 500;
       color: #0b2545; 
       background-color: #ffffff;
       -webkit-font-smoothing: antialiased;
     }
     .text-xs {
-      font-size: 0.875rem !important;
+      font-size: 0.8125rem !important;
       font-weight: 600;
-      letter-spacing: 0.02em;
     }
     .text-\[10px\], .text-\[11px\] {
       font-size: 0.8125rem !important;
       font-weight: 600;
-      letter-spacing: 0.02em;
     }
     .text-sm {
-      font-size: 1.025rem !important;
+      font-size: 0.9375rem !important;
     }
     .hero-bg {
       background-image: linear-gradient(180deg, rgba(10, 18, 30, 0.75) 0%, rgba(10, 18, 30, 0.9) 100%), url('images/75nmeaVY0yWUShlVFysSmJb9Q.png');
       background-size: cover; 
       background-position: center;
     }
-    .step-transition {
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    .field-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5' stroke='%2364748b' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.9rem center;
+      background-size: 1rem;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+    .radio-dot {
+      flex-shrink: 0;
+      width: 1.125rem;
+      height: 1.125rem;
+      border-radius: 999px;
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .peer:checked + span .radio-dot {
+      border-color: #0b2545;
+      box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 9px #0b2545;
     }
   </style>
 </head>
@@ -91,7 +127,7 @@ $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & 
   <div class="min-h-screen grid lg:grid-cols-12">
     
     <!-- COLUMN 1: VISUAL COLUMN (Desktop Only - Motivational Assurance) -->
-    <div class="hidden lg:flex lg:col-span-5 hero-bg relative flex-col justify-center p-12 text-white overflow-hidden">
+    <div class="hidden lg:flex lg:col-span-5 hero-bg relative lg:sticky lg:top-0 lg:h-screen lg:self-start flex-col justify-center p-12 text-white overflow-hidden">
       <div class="space-y-5 max-w-md">
         <span class="inline-block w-8 h-1 bg-blue-400 rounded-full mb-1"></span>
         <h1 class="text-4xl font-bold tracking-tight leading-tight text-white">
@@ -112,117 +148,146 @@ $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & 
     <!-- COLUMN 2: REGISTRATION FORM (Right Side) -->
     <div class="lg:col-span-7 flex flex-col justify-between p-6 sm:p-10 md:p-14 bg-white min-h-screen">
       
-      <!-- Brand mark: stays above the form without adding a tall header on mobile. -->
-      <a href="index" class="flex items-center justify-center lg:justify-end pt-2 sm:pt-3 pb-2" aria-label="Flowwithlit home">
-        <img src="logo/flowwithlit-wordmark.png" alt="Flowwithlit" class="h-8 sm:h-9 w-auto object-contain" />
-      </a>
-
       <!-- Center Form Content Container -->
       <div class="max-w-md w-full mx-auto my-auto py-4">
-        
-        <!-- Header with Back Arrow Icon for Step 2 -->
-        <div class="mb-6 flex items-center justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-[#0b2545]">Create Account</h1>
-            <p class="text-xs text-slate-500 mt-1">Enter your details to get started with Flowwithlit</p>
-          </div>
 
-          <!-- Top Back Arrow Icon Button (Hidden on Step 1, Visible on Step 2) -->
-          <button type="button" id="btn-back-to-step-1" class="hidden p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-[#0b2545] transition" title="Go back to Step 1">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-          </button>
+        <!-- Brand mark: centred directly above the form -->
+        <a href="./" class="flex items-center justify-center mb-8" aria-label="Flowwithlit home">
+          <img src="logo/flowwithlit-wordmark.png" alt="Flowwithlit" class="h-9 sm:h-10 w-auto object-contain" />
+        </a>
+
+        <!-- Header -->
+        <div class="mb-6 text-center">
+          <h1 class="text-2xl font-bold text-[#0b2545]">Create your account</h1>
+          <p class="text-xs text-slate-500 mt-1">Start receiving payments and moving money with Flowwithlit</p>
         </div>
 
         <!-- Alert Message Box -->
         <div id="alert-box" class="hidden mb-5 p-3.5 rounded-xl text-xs font-medium border border-red-200 bg-red-50 text-red-700"></div>
 
-        <!-- GOOGLE SIGN-UP OPTION AT THE TOP -->
-        <button id="google-signup-btn" type="button" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold py-3 px-4 rounded-xl transition shadow-sm mb-5">
-          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Sign up with Google</span>
-        </button>
-
-        <!-- Or Divider -->
-        <div class="relative flex items-center justify-center mb-6">
-          <div class="border-t border-slate-200 w-full"></div>
-          <span class="bg-white px-3 text-[10px] uppercase tracking-wider text-slate-400 font-bold absolute">OR REGISTER WITH EMAIL</span>
+        <?php if ($googleClientId !== ''): ?>
+        <!-- Real Google sign-up (verified server-side). Hidden entirely when Google isn't configured. -->
+        <div data-google-block>
+          <div id="googleSignIn" class="mb-5 flex min-h-[44px] w-full justify-center" data-client-id="<?= htmlspecialchars($googleClientId, ENT_QUOTES, 'UTF-8') ?>" data-context="signup"></div>
+          <div class="relative flex items-center justify-center mb-6">
+            <div class="border-t border-slate-200 w-full"></div>
+            <span class="bg-white px-3 text-[10px] uppercase tracking-wider text-slate-400 font-bold absolute">OR REGISTER WITH EMAIL</span>
+          </div>
         </div>
+        <?php endif; ?>
 
-        <!-- Registration Multi-Step Form (Max 3 inputs per view) -->
-        <form id="register-form" autocomplete="on">
-          
-          <!-- STEP 1 PANEL (Max 3 Inputs: Name, Email, Phone) -->
-          <div id="step-1-panel" class="space-y-4 step-transition">
-            <div>
-              <label for="full_name" class="block text-xs font-bold text-[#0b2545] mb-1.5">Full Legal Name</label>
-              <input type="text" id="full_name" required placeholder="Pamakinwa Olayegundoye" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
-            </div>
+        <!-- Registration Form -->
+        <form id="register-form" autocomplete="on" novalidate class="space-y-4">
 
-            <div>
-              <label for="email" class="block text-xs font-bold text-[#0b2545] mb-1.5">Email Address</label>
-              <input type="email" id="email" required placeholder="name@company.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
-            </div>
-
-            <div>
-              <label for="phone" class="block text-xs font-bold text-[#0b2545] mb-1.5">Phone Number (Optional)</label>
-              <input type="tel" id="phone" placeholder="+234 801 234 5678" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
-            </div>
-
-            <button type="button" id="btn-to-step-2" class="w-full group inline-flex items-center justify-between bg-[#0b2545] hover:bg-[#071930] text-white text-xs font-semibold py-3.5 pl-6 pr-2 rounded-xl shadow-md transition-all duration-300 mt-2">
-              <span>Continue to Password</span>
-              <span class="w-7 h-7 rounded-full bg-white text-[#0b2545] flex items-center justify-center font-bold shrink-0 transition-transform duration-300 group-hover:scale-105">
-                <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-              </span>
-            </button>
+          <!-- Account type -->
+          <div role="radiogroup" aria-label="Account type" class="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-full">
+            <label class="cursor-pointer">
+              <input type="radio" name="account_type" value="business" class="sr-only peer" checked />
+              <span class="block text-center text-xs py-2.5 rounded-full text-slate-500 transition peer-checked:bg-white peer-checked:text-[#0b2545] peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-[#0b2545]">Business</span>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="account_type" value="individual" class="sr-only peer" />
+              <span class="block text-center text-xs py-2.5 rounded-full text-slate-500 transition peer-checked:bg-white peer-checked:text-[#0b2545] peer-checked:shadow-sm peer-focus-visible:ring-2 peer-focus-visible:ring-[#0b2545]">Personal</span>
+            </label>
           </div>
 
-          <!-- STEP 2 PANEL (Max 3 Controls: Password, Confirm Password, Terms Checkbox) -->
-          <div id="step-2-panel" class="hidden space-y-4 step-transition">
+          <div>
+            <label for="country" class="block text-xs font-bold text-[#0b2545] mb-1.5">Country</label>
+            <select id="country" required class="field-select w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition">
+              <?php foreach ($signupCountries as $i => $c): ?>
+              <option value="<?= $h($c['code']) ?>" data-dial="<?= $h($c['dial_code']) ?>"<?= $i === 0 ? ' selected' : '' ?>><?= $h($c['name']) ?></option>
+              <?php endforeach; ?>
+              <option value="OTHER">Other countries</option>
+            </select>
+          </div>
+
+          <div data-business-only>
+            <label for="business_name" class="block text-xs font-bold text-[#0b2545] mb-1.5">Business name</label>
+            <input type="text" id="business_name" autocomplete="organization" maxlength="191" placeholder="Doe Ventures" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label for="password" class="block text-xs font-bold text-[#0b2545] mb-1.5">Create Password (Min 8 Characters)</label>
-              <div class="relative">
-                <input type="password" id="password" minlength="8" placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition pr-10" />
-                <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
+              <label for="first_name" class="block text-xs font-bold text-[#0b2545] mb-1.5">First name</label>
+              <input type="text" id="first_name" required autocomplete="given-name" maxlength="75" placeholder="John" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
             </div>
-
             <div>
-              <label for="confirm_password" class="block text-xs font-bold text-[#0b2545] mb-1.5">Confirm Password</label>
-              <div class="relative">
-                <input type="password" id="confirm_password" minlength="8" placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition pr-10" />
-                <button type="button" id="toggle-confirm-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-              </div>
+              <label for="last_name" class="block text-xs font-bold text-[#0b2545] mb-1.5">Last name</label>
+              <input type="text" id="last_name" required autocomplete="family-name" maxlength="75" placeholder="Doe" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
             </div>
+          </div>
 
-            <!-- Terms Agreement -->
-            <div class="flex items-start gap-2.5 pt-1">
-              <input type="checkbox" id="terms" required class="mt-0.5 rounded border-slate-300 text-[#0b2545] focus:ring-[#0b2545] shrink-0" />
-              <label for="terms" class="text-[11px] text-slate-600 leading-relaxed">
-                I agree to Flowwithlit's <a href="terms" class="text-blue-600 hover:underline font-semibold" target="_blank">Terms of Service</a>, <a href="privacy" class="text-blue-600 hover:underline font-semibold" target="_blank">Privacy Policy</a>, and <a href="aml-kyc-policy" class="text-blue-600 hover:underline font-semibold" target="_blank">AML/KYC Policy</a>.
-              </label>
+          <div>
+            <label for="email" class="block text-xs font-bold text-[#0b2545] mb-1.5">Email address</label>
+            <input type="email" id="email" required autocomplete="email" placeholder="john@company.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
+          </div>
+
+          <div>
+            <label for="phone" class="block text-xs font-bold text-[#0b2545] mb-1.5">Phone number</label>
+            <div class="flex gap-2">
+              <select id="phone_code" aria-label="Phone country code" class="field-select shrink-0 w-[6.5rem] pl-4 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition">
+                <?php foreach ($signupDialCodes as $dial): ?>
+                <option value="<?= $h($dial) ?>"<?= $dial === $defaultDialCode ? ' selected' : '' ?>><?= $h($dial) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <input type="tel" id="phone" required autocomplete="tel-national" inputmode="tel" placeholder="801 234 5678" class="min-w-0 flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition" />
             </div>
+          </div>
 
-            <!-- Full-Width Submit Button -->
-            <div class="pt-2">
-              <button type="submit" id="submit-btn" class="w-full group inline-flex items-center justify-between bg-[#0b2545] hover:bg-[#071930] text-white text-xs font-semibold py-3.5 pl-6 pr-2 rounded-xl shadow-md transition-all duration-300">
-                <span id="btn-text">Create Account</span>
-                <span class="w-7 h-7 rounded-full bg-white text-[#0b2545] flex items-center justify-center font-bold shrink-0 transition-transform duration-300 group-hover:scale-105">
-                  <svg id="btn-arrow" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-                  <svg id="btn-spinner" class="w-3.5 h-3.5 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                </span>
+          <div>
+            <label for="password" class="block text-xs font-bold text-[#0b2545] mb-1.5">Password</label>
+            <div class="relative">
+              <input type="password" id="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-full text-xs font-mono text-slate-900 focus:outline-none focus:border-[#0b2545] focus:bg-white transition pr-10" />
+              <button type="button" id="toggle-password" aria-label="Show password" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               </button>
             </div>
+          </div>
+
+          <!-- Business type -->
+          <fieldset data-business-only class="pt-1">
+            <legend class="block text-xs font-bold text-[#0b2545] mb-2.5">What type of business do you own?</legend>
+            <div class="space-y-3">
+              <label class="block cursor-pointer">
+                <input type="radio" name="business_stage" value="starter" class="sr-only peer" />
+                <span class="flex items-start gap-3 p-4 rounded-2xl border border-slate-200 bg-white transition hover:border-slate-300 peer-checked:border-[#0b2545] peer-checked:bg-[#eef4ff] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0b2545]">
+                  <span class="radio-dot mt-0.5"></span>
+                  <span>
+                    <span class="block text-sm font-bold text-[#0b2545]">Starter Business</span>
+                    <span class="block text-xs text-slate-500 mt-1 leading-relaxed">I'm testing my ideas with real customers, and preparing to register my company</span>
+                  </span>
+                </span>
+              </label>
+              <label class="block cursor-pointer">
+                <input type="radio" name="business_stage" value="registered" class="sr-only peer" />
+                <span class="flex items-start gap-3 p-4 rounded-2xl border border-slate-200 bg-white transition hover:border-slate-300 peer-checked:border-[#0b2545] peer-checked:bg-[#eef4ff] peer-focus-visible:ring-2 peer-focus-visible:ring-[#0b2545]">
+                  <span class="radio-dot mt-0.5"></span>
+                  <span>
+                    <span class="block text-sm font-bold text-[#0b2545]">Registered Business</span>
+                    <span class="block text-xs text-slate-500 mt-1 leading-relaxed">My business has the approval, documentation, and licences required to operate legally</span>
+                  </span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Terms Agreement -->
+          <div class="flex items-start gap-2.5 pt-1">
+            <input type="checkbox" id="terms" required class="mt-0.5 rounded border-slate-300 text-[#0b2545] focus:ring-[#0b2545] shrink-0" />
+            <label for="terms" class="text-[11px] text-slate-600 leading-relaxed">
+              I agree to Flowwithlit's <a href="terms" class="text-blue-600 hover:underline font-semibold" target="_blank">Terms of Service</a>, <a href="privacy" class="text-blue-600 hover:underline font-semibold" target="_blank">Privacy Policy</a>, and <a href="aml-kyc-policy" class="text-blue-600 hover:underline font-semibold" target="_blank">AML/KYC Policy</a>.
+            </label>
+          </div>
+
+          <!-- Full-Width Submit Button -->
+          <div class="pt-2">
+            <button type="submit" id="submit-btn" class="w-full group inline-flex items-center justify-between bg-[#0b2545] hover:bg-[#071930] text-white text-xs font-semibold py-3.5 pl-6 pr-2 rounded-full shadow-md transition-all duration-300">
+              <span id="btn-text">Create Account</span>
+              <span class="w-7 h-7 rounded-full bg-white text-[#0b2545] flex items-center justify-center font-bold shrink-0 transition-transform duration-300 group-hover:scale-105">
+                <svg id="btn-arrow" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                <svg id="btn-spinner" class="w-3.5 h-3.5 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              </span>
+            </button>
           </div>
 
         </form>
@@ -251,128 +316,112 @@ $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const alertBox = document.getElementById('alert-box');
-      const step1Panel = document.getElementById('step-1-panel');
-      const step2Panel = document.getElementById('step-2-panel');
-      const btnToStep2 = document.getElementById('btn-to-step-2');
-      const btnBackToStep1 = document.getElementById('btn-back-to-step-1');
-
-      const fullNameInput = document.getElementById('full_name');
+      const registerForm = document.getElementById('register-form');
+      const countrySelect = document.getElementById('country');
+      const phoneCodeSelect = document.getElementById('phone_code');
+      const businessNameInput = document.getElementById('business_name');
+      const firstNameInput = document.getElementById('first_name');
+      const lastNameInput = document.getElementById('last_name');
       const emailInput = document.getElementById('email');
       const phoneInput = document.getElementById('phone');
       const passwordInput = document.getElementById('password');
-      const confirmPasswordInput = document.getElementById('confirm_password');
+      const businessOnly = document.querySelectorAll('[data-business-only]');
 
       function showAlert(msg) {
+        alertBox.textContent = msg;
         alertBox.classList.remove('hidden');
-        alertBox.innerHTML = msg;
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
       function hideAlert() {
         alertBox.classList.add('hidden');
-        alertBox.innerHTML = '';
+        alertBox.textContent = '';
       }
 
-      // Step 1 -> Step 2 Validation & Navigation
-      btnToStep2.addEventListener('click', () => {
-        hideAlert();
+      const accountType = () => registerForm.querySelector('input[name="account_type"]:checked').value;
 
-        const nameVal = fullNameInput.value.trim();
-        const emailVal = emailInput.value.trim();
+      // Business-only fields (business name, business type) hide for Personal accounts.
+      function syncAccountType() {
+        const isBusiness = accountType() === 'business';
+        businessOnly.forEach(el => el.classList.toggle('hidden', !isBusiness));
+      }
+      registerForm.querySelectorAll('input[name="account_type"]').forEach(r => r.addEventListener('change', () => { hideAlert(); syncAccountType(); }));
+      syncAccountType();
 
-        if (!nameVal) {
-          showAlert('Please enter your full legal name.');
-          fullNameInput.focus();
-          return;
-        }
-
-        if (!emailVal || !emailVal.includes('@') || !emailVal.includes('.')) {
-          showAlert('Please enter a valid email address.');
-          emailInput.focus();
-          return;
-        }
-
-        // Advance to Step 2 & Show Top Back Arrow Icon
-        step1Panel.classList.add('hidden');
-        step2Panel.classList.remove('hidden');
-        btnBackToStep1.classList.remove('hidden');
-        passwordInput.focus();
+      // Picking an approved country sets its dialling code (e.g. Nigeria → +234).
+      countrySelect.addEventListener('change', () => {
+        const dial = countrySelect.selectedOptions[0]?.dataset.dial;
+        if (dial) phoneCodeSelect.value = dial;
       });
 
-      // Step 2 -> Step 1 Back Navigation via Top Back Arrow Icon
-      btnBackToStep1.addEventListener('click', () => {
-        hideAlert();
-        step2Panel.classList.add('hidden');
-        btnBackToStep1.classList.add('hidden');
-        step1Panel.classList.remove('hidden');
-      });
-
-      // Toggle Passwords Visibility
+      // Toggle password visibility
       const togglePasswordBtn = document.getElementById('toggle-password');
-      if (togglePasswordBtn) {
-        togglePasswordBtn.addEventListener('click', () => {
-          const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-          passwordInput.setAttribute('type', type);
-        });
-      }
-
-      const toggleConfirmPasswordBtn = document.getElementById('toggle-confirm-password');
-      if (toggleConfirmPasswordBtn) {
-        toggleConfirmPasswordBtn.addEventListener('click', () => {
-          const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-          confirmPasswordInput.setAttribute('type', type);
-        });
-      }
+      togglePasswordBtn.addEventListener('click', () => {
+        const show = passwordInput.type === 'password';
+        passwordInput.type = show ? 'text' : 'password';
+        togglePasswordBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      });
 
       // Form Submission Handler (AJAX)
-      const registerForm = document.getElementById('register-form');
       const submitBtn = document.getElementById('submit-btn');
       const btnText = document.getElementById('btn-text');
       const btnArrow = document.getElementById('btn-arrow');
       const btnSpinner = document.getElementById('btn-spinner');
 
+      function setLoading(loading, label) {
+        submitBtn.disabled = loading;
+        btnText.innerText = label || 'Create Account';
+        btnArrow.classList.toggle('hidden', loading);
+        btnSpinner.classList.toggle('hidden', !loading);
+      }
+
+      function fail(msg, input) {
+        showAlert(msg);
+        if (input) input.focus({ preventScroll: true });
+      }
+
       registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideAlert();
 
-        const full_name = fullNameInput.value.trim();
+        const type = accountType();
+        const isBusiness = type === 'business';
+        const business_name = businessNameInput.value.trim();
+        const first_name = firstNameInput.value.trim();
+        const last_name = lastNameInput.value.trim();
         const email = emailInput.value.trim();
         const phone = phoneInput.value.trim();
         const password = passwordInput.value;
-        const confirm_password = confirmPasswordInput.value;
+        const stageInput = registerForm.querySelector('input[name="business_stage"]:checked');
         const terms = document.getElementById('terms').checked;
 
-        if (!password || password.length < 8) {
-          showAlert('Password must be at least 8 characters long.');
-          passwordInput.focus();
-          return;
-        }
+        if (isBusiness && !business_name) return fail('Please enter your business name.', businessNameInput);
+        if (!first_name) return fail('Please enter your first name.', firstNameInput);
+        if (!last_name) return fail('Please enter your last name.', lastNameInput);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail('Please enter a valid email address.', emailInput);
+        const digits = phone.replace(/\D+/g, '').replace(/^0+/, '');
+        if (digits.length < 6 || digits.length > 14) return fail('Please enter a valid phone number.', phoneInput);
+        if (password.length < 8) return fail('Password must be at least 8 characters long.', passwordInput);
+        if (isBusiness && !stageInput) return fail('Please tell us what type of business you own.');
+        if (!terms) return fail('You must agree to the Terms of Service and Privacy Policy to continue.');
 
-        if (password !== confirm_password) {
-          showAlert('Passwords do not match. Please verify your password entry.');
-          confirmPasswordInput.focus();
-          return;
-        }
-
-        if (!terms) {
-          showAlert('You must agree to the Terms of Service and Privacy Policy to continue.');
-          return;
-        }
-
-        submitBtn.disabled = true;
-        btnText.innerText = 'Creating Account...';
-        btnArrow.classList.add('hidden');
-        btnSpinner.classList.remove('hidden');
+        setLoading(true, 'Creating Account...');
 
         try {
           const res = await fetch('api/auth/register.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              full_name, 
-              email, 
-              phone, 
-              password, 
-              account_type: 'individual'
+            body: JSON.stringify({
+              account_type: type,
+              country: countrySelect.value,
+              business_name: isBusiness ? business_name : '',
+              business_stage: isBusiness ? stageInput.value : '',
+              first_name,
+              last_name,
+              email,
+              phone_code: phoneCodeSelect.value,
+              phone,
+              password
             })
           });
 
@@ -381,66 +430,19 @@ $pageDesc  = 'Register for a Flowwithlit account. Accept payments with Crypto & 
           if (res.ok && data.success) {
             localStorage.setItem('flow_token', data.token);
             localStorage.setItem('flow_user', JSON.stringify(data.user));
-
             window.location.href = `verify-otp?type=email_verification&email=${encodeURIComponent(email)}`;
           } else {
             showAlert(data.error || 'Registration failed. Please check your details and try again.');
-            submitBtn.disabled = false;
-            btnText.innerText = 'Create Account';
-            btnArrow.classList.remove('hidden');
-            btnSpinner.classList.add('hidden');
+            setLoading(false);
           }
         } catch (err) {
           showAlert('Network error connecting to registration server.');
-          submitBtn.disabled = false;
-          btnText.innerText = 'Create Account';
-          btnArrow.classList.remove('hidden');
-          btnSpinner.classList.add('hidden');
+          setLoading(false);
         }
       });
 
-      // Google Sign Up Handler (Simulated Integration)
-      document.getElementById('google-signup-btn').addEventListener('click', async () => {
-        const mockGoogleUser = {
-          google_id: 'google_user_' + Math.floor(Math.random() * 1000000),
-          email: 'user_' + Math.floor(Math.random() * 900) + '@gmail.com',
-          full_name: 'Google User',
-          avatar_url: 'https://lh3.googleusercontent.com/a/default-user'
-        };
-
-        submitBtn.disabled = true;
-        btnText.innerText = 'Connecting with Google...';
-        btnArrow.classList.add('hidden');
-        btnSpinner.classList.remove('hidden');
-
-        try {
-          const res = await fetch('api/auth/google.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mockGoogleUser)
-          });
-
-          const data = await res.json();
-          if (res.ok && data.success) {
-            localStorage.setItem('flow_token', data.token);
-            localStorage.setItem('flow_user', JSON.stringify(data.user));
-            window.location.href = 'dashboard';
-          } else {
-            showAlert(data.error || 'Google Registration failed.');
-            submitBtn.disabled = false;
-            btnText.innerText = 'Create Account';
-            btnArrow.classList.remove('hidden');
-            btnSpinner.classList.add('hidden');
-          }
-        } catch (err) {
-          showAlert('Network error connecting to Google Authentication server.');
-          submitBtn.disabled = false;
-          btnText.innerText = 'Create Account';
-          btnArrow.classList.remove('hidden');
-          btnSpinner.classList.add('hidden');
-        }
-      });
     });
   </script>
+  <?php if ($googleClientId !== ''): ?><script src="assets/auth/google-signin.js?v=1" defer></script><?php endif; ?>
 </body>
 </html>

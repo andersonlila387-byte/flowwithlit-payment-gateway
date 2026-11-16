@@ -13,7 +13,7 @@ $activePage = $activePage ?? 'dashboard';
 <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#09182b]/95 backdrop-blur-md border-t border-gray-200/80 dark:border-gray-800 px-3 py-2 flex items-center justify-around shadow-lg select-none transition-colors duration-200">
   
   <!-- 1. Dashboard -->
-  <a href="index.php" class="mobile-nav-btn flex flex-col items-center gap-1 active:scale-95 transition" data-title="Dashboard">
+  <a href="./" class="mobile-nav-btn flex flex-col items-center gap-1 active:scale-95 transition" data-title="Dashboard">
     <div class="nav-circle w-10 h-10 rounded-full <?= ($activePage === 'dashboard') ? 'bg-[#0b2545] dark:bg-[#134074] text-white shadow-xs' : 'bg-gray-50 dark:bg-[#0c1f36] text-gray-600 dark:text-gray-300' ?> flex items-center justify-center transition">
       <i data-lucide="layout-grid" class="w-4 h-4"></i>
     </div>

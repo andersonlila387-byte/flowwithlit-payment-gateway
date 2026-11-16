@@ -25,13 +25,12 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
     <link rel="icon" type="image/png" sizes="32x32" href="../logo/flowwithlit-icon-32.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="../logo/flowwithlit-icon-192.png" />
     <link rel="manifest" href="../site.webmanifest" />
-  <!-- Google Fonts: Smooch Sans (Primary UI) & IBM Plex Mono (Financial Data & References) -->
+  <!-- Fonts: Satoshi (same as the public website) & IBM Plex Mono (financial data & references) -->
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Smooch+Sans:wght@300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -42,7 +41,7 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Smooch Sans"', 'sans-serif'],
+            sans: ['Satoshi', 'system-ui', 'sans-serif'],
             mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
           },
           colors: {
@@ -70,9 +69,7 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
     }
   </script>
   <style>
-    .dark #sidebarMenu .sidebar-item:hover,
-    .dark #sidebarMenu .sidebar-item:focus-visible,
-    .dark #profileDropdownMenu a:hover,
+        .dark #profileDropdownMenu a:hover,
     .dark #profileDropdownMenu a:focus-visible {
       background-color:#13304f !important;
       color:#f8fafc !important;
@@ -87,6 +84,20 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
       color:#fda4af !important;
     }
     .dark #logoutBtn > div:first-child { background-color:#3b1d2b; color:#fda4af; }
+    /* Header + sidebar form one white "L" frame; the content area sits inside it as a soft panel. */
+    @media (min-width: 768px) {
+      #appWorkspace > main { background: #f5f6f8; border-top-left-radius: 28px; }
+      .dark #appWorkspace > main { background: #071322; }
+    }
+    #sidebarMenu .sidebar-item { position: relative; color: #56667c; }
+    #sidebarMenu .sidebar-item:hover, #sidebarMenu .sidebar-item:focus-visible { color: #0b2545; }
+    .dark #sidebarMenu .sidebar-item { color: #9fb0c6; }
+    .dark #sidebarMenu .sidebar-item:hover, .dark #sidebarMenu .sidebar-item:focus-visible { color: #ffffff; }
+    #sidebarMenu .sidebar-item.is-active { color: #0b2545; }
+    .dark #sidebarMenu .sidebar-item.is-active { color: #ffffff; }
+    #sidebarMenu .sidebar-item.is-active::before {
+      content: ""; position: absolute; left: -18px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: #c9a44a;
+    }
     #profileDropdownMenu { width:260px; max-width:calc(100vw - 24px); max-height:calc(100dvh - 104px); overflow-y:auto; }
     #profileDropdownMenu > div:first-child { padding:12px; gap:8px; }
     #profileDropdownMenu a, #profileDropdownMenu #logoutBtn { padding-block:7px; }
@@ -116,33 +127,24 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
       #profileChevron { display:none; }
     }
     html {
-      font-size: 17px;
+      font-size: 16px;
     }
     body {
-      font-family: 'Smooch Sans', sans-serif;
-      font-weight: 600;
-      letter-spacing: 0.025em;
+      font-family: 'Satoshi', system-ui, sans-serif;
+      font-weight: 500;
       background-color: #ffffff;
       margin: 0;
       padding: 0;
       color: #0b2545;
       -webkit-font-smoothing: antialiased;
     }
-    
-    /* Boost legibility for compact text classes in Smooch Sans */
-    .text-xs {
-      font-size: 0.875rem !important;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    .text-\[10px\], .text-\[11px\] {
-      font-size: 0.8125rem !important;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-    }
-    .text-sm {
-      font-size: 1.025rem !important;
-    }
+
+    /* Keep small text readable */
+    .text-xs { font-size: 0.8125rem !important; }
+    .text-\[10px\], .text-\[11px\] { font-size: 0.75rem !important; }
+
+    /* Notification previews: title plus two lines only; the full message is on the notifications page */
+    .notification-preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     
     /* ================= COMPREHENSIVE DARK MODE (ALL DASHBOARDS) ================= */
     .dark {
@@ -229,61 +231,48 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
       background: #94a3b8;
     }
 
-    /* A compact loader with a simple zoom-out exit. */
+    /* Page loader: a thin gold progress line along the top + the logo mark inside a spinning gold ring.
+       - The cover matches the page colour, so fast loads feel instant (no flash).
+       - Everything fades in only after 250ms, so quick page loads never show a loader at all.
+       - Only transform/opacity animate, so it stays smooth while the page's scripts run. */
     #flowPreloader {
-      opacity: 1;
-      visibility: visible;
-      transition: opacity .45s ease, visibility 0s linear .45s;
-      background: #0b2545;
-    }
-    #flowPreloader.is-complete {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .flow-preloader-mark { transform:scale(1); transition:transform .45s ease-out; }
-    #flowPreloader.is-complete .flow-preloader-mark { transform:scale(.6); }
-    #flowPreloader.is-complete .flow-preloader-orb { animation-play-state:paused; }
-    .flow-preloader-orb {
-      width: 50px;
-      height: 50px;
-      border-radius: 9999px;
-      overflow: hidden;
       background: #ffffff;
-      border: 1px solid rgba(255,255,255,.2);
-      box-shadow: 0 4px 12px rgba(0, 8, 27, .2);
-      animation: flow-pulse 1.1s ease-in-out infinite;
+      opacity: 1; visibility: visible;
+      transition: opacity .25s ease, visibility 0s linear .25s;
     }
-    .flow-preloader-orb img { width: 40px; height: 40px; border-radius:50%; }
-    .flow-preloader-orbit { position:absolute; inset:-5px; border:1.5px solid rgba(255,255,255,.16); border-top-color:#7dd3fc; border-right-color:#fff; border-radius:50%; animation:flow-orbit 1.4s linear infinite; }
-    @keyframes flow-orbit { to { transform:rotate(360deg); } }
-    @keyframes flow-pulse {
-      0%, 100% { transform: scale(.88); }
-      50% { transform: scale(1); }
+    .dark #flowPreloader { background: #071322; }
+    #flowPreloader.is-complete { opacity: 0; visibility: hidden; pointer-events: none; }
+    .flow-topline { position: absolute; top: 0; left: 0; right: 0; height: 2px; overflow: hidden; opacity: 0; animation: flow-in .2s ease-out .25s forwards; }
+    .flow-topline::before { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, #c9a44a 30%, #e9c97a 70%, transparent); animation: flow-line 1.2s cubic-bezier(.4, 0, .2, 1) infinite; will-change: transform; }
+    .flow-loader { position: relative; display: grid; place-items: center; width: 64px; height: 64px; opacity: 0; animation: flow-in .25s ease-out .25s forwards; }
+    .flow-loader::before, .flow-loader::after { content: ""; position: absolute; inset: 0; border-radius: 50%; }
+    .flow-loader::before { border: 2.5px solid rgba(11, 37, 69, .08); }
+    .dark .flow-loader::before { border-color: rgba(255, 255, 255, .08); }
+    .flow-loader::after {
+      background: conic-gradient(from 0deg, rgba(201, 164, 74, 0) 0deg, rgba(201, 164, 74, 0) 200deg, #c9a44a 340deg, #e9c97a 360deg);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+              mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+      animation: flow-spin .8s linear infinite; will-change: transform;
     }
+    .flow-loader img { width: 36px; height: 36px; border-radius: 11px; }
+    @keyframes flow-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+    @keyframes flow-spin { to { transform: rotate(360deg); } }
+    @keyframes flow-line { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
     @media (prefers-reduced-motion: reduce) {
-      .flow-preloader-orb, #flowPreloader.is-complete .flow-preloader-orb { animation: none; }
-      #flowPreloader { transition: opacity .15s ease, visibility 0s linear .15s; }
-      .flow-preloader-orbit { animation:none; }
-      .flow-preloader-mark, #flowPreloader.is-complete .flow-preloader-mark { transition:none; transform:none; }
+      .flow-loader::after { animation-duration: 2.4s; }
+      .flow-topline::before { animation: none; width: 100%; opacity: .5; }
     }
   </style>
 </head>
 <body class="bg-white dark:bg-[#071322] text-[#0b2545] dark:text-gray-100 <?= $appBodyLayout ?> flex flex-col transition-colors duration-200">
 
-  <!-- Compact pulsing brand preloader -->
-  <div id="flowPreloader" class="fixed inset-0 z-[200] overflow-hidden text-white" role="status" aria-live="polite" aria-label="Loading Flowwithlit">
-    <div class="relative z-10 grid min-h-full place-items-center px-6">
-      <div class="flex flex-col items-center text-center">
-        <div class="flow-preloader-mark relative grid h-[50px] w-[50px] place-items-center">
-          <div class="flow-preloader-orbit" aria-hidden="true"></div>
-          <div class="flow-preloader-orb relative z-10 grid place-items-center">
-            <img src="../logo/flowwithlit-icon-192.png" alt="" class="rounded-full" />
-          </div>
-        </div>
-        <span class="sr-only">Loading Flowwithlit</span>
-      </div>
+  <!-- Page loader: gold top line + logo in a spinning ring (appears only if loading takes longer than 250ms) -->
+  <div id="flowPreloader" class="fixed inset-0 z-[200] grid place-items-center" role="status" aria-live="polite">
+    <div class="flow-topline" aria-hidden="true"></div>
+    <div class="flow-loader">
+      <img src="../logo/flowwithlit-icon-192.png" alt="" width="36" height="36" />
     </div>
+    <span class="sr-only">Loading</span>
   </div>
 
   <!-- Full-screen command search -->
@@ -291,7 +280,7 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
     <div class="min-h-full">
       <div class="max-w-4xl mx-auto px-5 sm:px-8 pt-6 sm:pt-10">
         <div class="flex items-center justify-between gap-5 pb-5">
-          <a href="index.php" class="flex items-center gap-2.5 text-gray-900 dark:text-white">
+          <a href="./" class="flex items-center gap-2.5 text-gray-900 dark:text-white">
             <img src="../logo/flowwithlit-icon-192.png" alt="" class="w-9 h-9 rounded-lg" />
             <span class="text-xl font-bold tracking-tight">Flowwithlit</span>
           </a>
@@ -315,7 +304,7 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
             <span id="commandSearchCount" class="text-xs text-gray-400">11 destinations</span>
           </div>
           <div id="commandSearchResults" class="grid sm:grid-cols-2 gap-3">
-            <a href="index.php" data-command-result data-search-terms="overview dashboard home analytics balance activity" class="command-search-result group flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/60 dark:hover:bg-sky-950/30 transition">
+            <a href="./" data-command-result data-search-terms="overview dashboard home analytics balance activity" class="command-search-result group flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/60 dark:hover:bg-sky-950/30 transition">
               <span class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-300 grid place-items-center"><i data-lucide="layout-dashboard" class="w-5 h-5"></i></span><span><strong class="block text-base text-gray-900 dark:text-white">Overview</strong><small class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Your account activity and balances</small></span>
             </a>
             <a href="transactions.php" data-command-result data-search-terms="transaction transactions history transfer payment receipt details" class="command-search-result group flex items-start gap-3 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 hover:border-sky-300 dark:hover:border-sky-700 hover:bg-sky-50/60 dark:hover:bg-sky-950/30 transition">
@@ -356,10 +345,10 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
   </div>
 
   <!-- Fixed Top Header Navigation Bar (Never scrolls) -->
-  <header id="appHeader" class="w-full h-20 flex-shrink-0 bg-white dark:bg-[#09182b] border-b border-gray-100 dark:border-gray-800/80 px-6 lg:px-8 flex items-center justify-between z-40 transition-colors duration-200">
+  <header id="appHeader" class="w-full h-20 flex-shrink-0 bg-white dark:bg-[#09182b] border-b md:border-b-0 border-gray-100 dark:border-gray-800/80 px-6 lg:px-8 flex items-center justify-between z-40 transition-colors duration-200">
     
     <!-- Brand Logo -->
-    <a href="index.php" class="flex items-center gap-3 cursor-pointer">
+    <a href="./" class="flex items-center gap-3 cursor-pointer">
       <div class="w-11 h-11 rounded-xl bg-[#0b2545] flex items-center justify-center shadow-sm relative overflow-hidden group">
         <img src="../logo/flowwithlit-icon-192.png" alt="" class="w-full h-full object-cover" />
         <svg class="hidden w-6 h-6 text-sky-400" viewBox="0 0 24 24" fill="currentColor">
@@ -428,11 +417,8 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
       </button>
       <div id="notificationDropdownMenu" class="hidden absolute right-0 mt-3 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#0c1f36] shadow-2xl z-50">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-4 py-3.5"><div><h2 class="text-base font-bold text-gray-900 dark:text-white">Notifications</h2><p id="notificationUnreadText" class="text-xs text-gray-400">Loading updates…</p></div><button id="markNotificationsRead" type="button" class="rounded-lg px-2 py-1 text-xs font-bold text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/30">Mark all read</button></div>
-        <div id="notificationFeed" class="max-h-[22rem] overflow-y-auto p-2">
+        <div id="notificationFeed" class="max-h-[22rem] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
           <div class="py-8 text-center text-xs text-gray-400">Loading notifications…</div>
-          <a href="developer.php" class="notification-item group mt-1 flex gap-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/25 p-3 transition hover:bg-sky-50 dark:hover:bg-sky-950/45"><span class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-violet-100 dark:bg-violet-950/60 text-violet-600 dark:text-violet-300"><i data-lucide="webhook" class="w-4 h-4"></i></span><span class="min-w-0 flex-1"><span class="flex items-start justify-between gap-3"><strong class="text-sm text-gray-900 dark:text-white">Webhook needs attention</strong><time class="whitespace-nowrap text-[10px] text-gray-400">18m</time></span><small class="mt-0.5 block text-xs text-gray-500 dark:text-gray-300">Your payment webhook returned an error twice.</small></span><span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-sky-500"></span></a>
-          <a href="settings.php" class="notification-item group mt-1 flex gap-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/25 p-3 transition hover:bg-sky-50 dark:hover:bg-sky-950/45"><span class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300"><i data-lucide="shield-check" class="w-4 h-4"></i></span><span class="min-w-0 flex-1"><span class="flex items-start justify-between gap-3"><strong class="text-sm text-gray-900 dark:text-white">Security reminder</strong><time class="whitespace-nowrap text-[10px] text-gray-400">1h</time></span><small class="mt-0.5 block text-xs text-gray-500 dark:text-gray-300">Set a Withdrawal PIN to protect outgoing transfers.</small></span><span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-sky-500"></span></a>
-          <a href="wallets.php" class="notification-item group mt-1 flex gap-3 rounded-xl p-3 transition hover:bg-gray-50 dark:hover:bg-gray-800/70"><span class="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300"><i data-lucide="arrow-left-right" class="w-4 h-4"></i></span><span class="min-w-0 flex-1"><span class="flex items-start justify-between gap-3"><strong class="text-sm text-gray-900 dark:text-white">Swap complete</strong><time class="whitespace-nowrap text-[10px] text-gray-400">Yesterday</time></span><small class="mt-0.5 block text-xs text-gray-500 dark:text-gray-300">0.5 BTC was converted to USD at your confirmed rate.</small></span></a>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 p-2"><a href="notifications.php" class="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-[#0b2545] dark:text-sky-300 hover:bg-gray-50 dark:hover:bg-gray-800">View all notifications <i data-lucide="arrow-right" class="w-4 h-4"></i></a></div>
       </div>
@@ -528,4 +514,4 @@ $appWorkspaceLayout = $appWorkspaceLayout ?? 'h-[calc(100vh-5rem)] overflow-hidd
   </header>
 
   <!-- Workspace Container: Non-scrolling Sidebar + Scrollable Content Area -->
-  <div class="flex flex-1 w-full <?= $appWorkspaceLayout ?>">
+  <div id="appWorkspace" class="flex flex-1 w-full <?= $appWorkspaceLayout ?>">

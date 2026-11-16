@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             error_log('Admin onboarding payload decrypt failed: '.$error->getMessage());
         }
         $files = $pdo->prepare("SELECT f.id,f.field_name,f.mime_type,f.byte_size,COALESCE(d.document_type,'other') document_type,COALESCE(d.status,'uploaded') status
-            FROM onboarding_files f LEFT JOIN business_documents d ON d.file_key=f.storage_key WHERE f.submission_id=? ORDER BY f.created_at ASC");
+            FROM onboarding_files f LEFT JOIN business_documents d ON d.file_key=f.storage_key COLLATE utf8mb4_unicode_ci WHERE f.submission_id=? ORDER BY f.created_at ASC");
         $files->execute([$submissionId]);
 
         jsonResponse([
@@ -47,13 +47,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'owner_name'=>$payload['ownerName'] ?? $submission['full_name'],
                 'owner_email'=>$payload['ownerEmail'] ?? $submission['email'],
                 'phone'=>$payload['phone'] ?? $submission['phone'],
+                'date_of_birth'=>$payload['dateOfBirth'] ?? null,
+                'address'=>implode(', ', array_filter([$payload['addressLine1'] ?? '', $payload['city'] ?? '', $payload['stateRegion'] ?? ''])) ?: null,
             ],
-            'business'=>[
+            'business'=>$submission['account_type'] === 'business' ? [
                 'name'=>$payload['businessName'] ?? ($submission['trading_name'] ?: $submission['legal_name']),
                 'type'=>$payload['businessType'] ?? $submission['business_type'],
-                'industry'=>$submission['industry'],
-                'website'=>$submission['website_url'],
-            ],
+                'stage'=>$payload['businessStage'] ?? null,
+                'registration_number'=>($payload['registrationNumber'] ?? '') ?: null,
+                'industry'=>$submission['industry'] ?? ($payload['industry'] ?? null),
+                'website'=>$submission['website_url'] ?? ($payload['website'] ?? null),
+                'payout'=>!empty($payload['accountNumber']) ? [
+                    'account_name'=>$payload['accountName'] ?? null,
+                    'bank_name'=>$payload['bankName'] ?? null,
+                    'account_last4'=>substr((string) $payload['accountNumber'], -4),
+                    'verified'=>!empty($payload['payoutVerified']),
+                ] : null,
+            ] : null,
             'documents'=>$files->fetchAll(),
         ]);
     }
@@ -114,8 +124,14 @@ try {
         $business->execute([$businessStatus, (int) $submission['business_id']]);
     }
     if ($status === 'approved') {
-        $tier = $pdo->prepare('UPDATE users SET kyc_tier=GREATEST(kyc_tier,2) WHERE id=?');
-        $tier->execute([(int) $submission['user_id']]);
+        // Personal → level 2 "Verified". Registered business → level 2 "Business verified".
+        // Starter business → level 1 "Business starter" until it registers.
+        $account = $pdo->prepare('SELECT account_type,business_stage FROM users WHERE id=?');
+        $account->execute([(int) $submission['user_id']]);
+        $user = $account->fetch() ?: [];
+        $targetTier = (($user['account_type'] ?? '') === 'business' && ($user['business_stage'] ?? '') === 'starter') ? 1 : 2;
+        $tier = $pdo->prepare('UPDATE users SET kyc_tier=GREATEST(kyc_tier,?) WHERE id=?');
+        $tier->execute([$targetTier, (int) $submission['user_id']]);
     }
     adminAudit($pdo, (int) $session['admin']['id'], 'onboarding.reviewed', 'onboarding_submission', (string) $submissionId, ['status'=>$status, 'review_note'=>$note ?: null]);
     $pdo->commit();

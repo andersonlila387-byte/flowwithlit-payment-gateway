@@ -32,7 +32,7 @@ function landingImage(string $name, ?string $alt = null): string {
       <h1 class="split">Pay, swap &amp; transfer money<br /> in Crypto and Naira</h1>
       <p class="hero__text" data-reveal style="--d:350ms">Accept, swap and send Naira and crypto from one simple wallet.</p>
       <div class="hero__ctas" data-reveal style="--d:480ms">
-        <a href="register" class="btn btn--gold"><span>Create free account</span><?= arrow() ?></a>
+        <a href="register" class="btn btn--light"><span>Create free account</span><?= arrow() ?></a>
         <a href="login" class="btn btn--glass"><span>Access your account</span><?= arrow() ?></a>
       </div>
       <p class="hero__note" data-reveal style="--d:600ms">
@@ -145,7 +145,7 @@ function landingImage(string $name, ?string $alt = null): string {
         <article class="method" data-reveal><span class="method__sym">@</span><h3>Flow Tags</h3><p>Get paid with a simple handle.</p></article>
         <article class="method" data-reveal><span class="method__sym">⇄</span><h3>Instant swaps</h3><p>Naira to crypto and back.</p></article>
       </div>
-      <a href="register" class="btn btn--gold section-cta" data-reveal><span>Start accepting payments</span><?= arrow() ?></a>
+      <a href="register" class="btn btn--light section-cta" data-reveal><span>Start accepting payments</span><?= arrow() ?></a>
     </div>
   </section>
 

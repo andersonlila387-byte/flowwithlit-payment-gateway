@@ -46,89 +46,76 @@ require_once __DIR__ . '/includes/sidebar.php';
         </div>
       </div>
 
-      <!-- KPI Overview Cards (4 Metric Cards) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-        
-        <!-- Card 1: Total Payouts (30D) -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between gap-4">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500">Disbursed (30 Days)</span>
-              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">NGN / crypto</span>
-            </div>
-            <div id="paymentsDisbursed" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2.5">₦0.00</div>
-            <div class="flex items-center gap-1.5 mt-2 text-xs font-semibold text-emerald-600">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-              </svg>
-              <span>No prior-period data</span>
-            </div>
-          </div>
+      <!-- Payment stats (last 30 days, NGN). Mobile: 2×2. Desktop: 4 in a row. Filled by /api/transactions/payouts-summary.php -->
+      <link rel="stylesheet" href="assets/stat-cards.css?v=1">
+      <section class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5" aria-label="Payments in the last 30 days">
 
-          <div class="pt-3 border-t border-gray-100">
-            <div class="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
-              <span>Monthly Volume Quota</span>
-              <span class="font-bold text-gray-700">0%</span>
-            </div>
-            <!-- Light blue range bar as requested -->
-            <div class="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
-              <div class="h-full bg-sky-400 rounded-full" style="width: 0%"></div>
-            </div>
+        <div class="flex min-w-0 flex-col rounded-[22px] border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex min-w-0 items-center gap-2"><span class="fwl-chip fwl-chip--blue"><i data-lucide="arrow-up-right" class="h-4 w-4"></i></span><span class="truncate text-sm font-semibold text-gray-700">Sent</span></div>
+            <span class="fwl-tag hidden sm:inline">30 days</span>
           </div>
+          <div id="paymentsDisbursed" class="stat-amount mt-3 text-lg font-extrabold leading-tight tracking-tight text-gray-900 sm:text-[1.6rem]">₦0.00</div>
+          <p id="paymentsSentNote" class="mt-1 text-xs text-gray-500">No payments sent yet</p>
         </div>
 
-        <!-- Card 2: Settlement Speed -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between gap-4">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500">Median Settlement</span>
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Real-time Rails"></span>
-            </div>
-            <div id="paymentsMedianSettlement" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2.5">—</div>
-            <p class="text-xs text-gray-400 mt-2">Nigerian bank rails and enabled crypto networks</p>
+        <div class="flex min-w-0 flex-col rounded-[22px] border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex min-w-0 items-center gap-2"><span class="fwl-chip fwl-chip--amber"><i data-lucide="clock-3" class="h-4 w-4"></i></span><span class="truncate text-sm font-semibold text-gray-700">In progress</span></div>
+            <span class="fwl-tag hidden sm:inline">Now</span>
           </div>
-
-          <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
-            <span>Direct Clearing</span>
-            <span class="font-semibold text-gray-700">0 Active Networks</span>
-          </div>
+          <div id="paymentsPendingAmount" class="stat-amount mt-3 text-lg font-extrabold leading-tight tracking-tight text-gray-900 sm:text-[1.6rem]">₦0.00</div>
+          <p id="paymentsPendingNote" class="mt-1 text-xs text-gray-500">Nothing processing</p>
         </div>
 
-        <!-- Card 3: Pending & Scheduled -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between gap-4">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500">Scheduled Payouts</span>
-              <span class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">0 Queued</span>
-            </div>
-            <div id="paymentsPendingAmount" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2.5">₦0.00</div>
-            <p class="text-xs text-gray-400 mt-2">Scheduled for next batch window (02:00 UTC)</p>
+        <div class="flex min-w-0 flex-col rounded-[22px] border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex min-w-0 items-center gap-2"><span class="fwl-chip fwl-chip--green"><i data-lucide="circle-check" class="h-4 w-4"></i></span><span class="truncate text-sm font-semibold text-gray-700">Success rate</span></div>
+            <span class="fwl-tag hidden sm:inline">30 days</span>
           </div>
-
-          <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-            <span class="text-gray-500 font-medium">Auto-release</span>
-            <a href="#paymentsLedger" class="font-bold text-[#0b2545] hover:underline">View queue &rarr;</a>
-          </div>
+          <div id="paymentsSuccessRate" class="stat-amount mt-3 text-lg font-extrabold leading-tight tracking-tight text-gray-900 sm:text-[1.6rem]">—</div>
+          <div class="fwl-meter mt-2" style="--meter:#059669" role="meter" aria-label="Success rate" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="paymentsSuccessMeter"><i style="width:0%"></i></div>
+          <p id="paymentsSuccessNote" class="mt-1.5 text-xs text-gray-500">No finished payments yet</p>
         </div>
 
-        <!-- Card 4: Multi-Currency Rails -->
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between gap-4">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500">Supported Rails</span>
-              <span class="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">0 Rails</span>
-            </div>
-            <div class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2.5">Global Payouts</div>
-            <p class="text-xs text-gray-400 mt-2">Enabled payment rails will appear here.</p>
+        <div class="flex min-w-0 flex-col rounded-[22px] border border-gray-200/80 bg-white p-4 shadow-sm sm:p-5">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex min-w-0 items-center gap-2"><span class="fwl-chip fwl-chip--slate"><i data-lucide="receipt-text" class="h-4 w-4"></i></span><span class="truncate text-sm font-semibold text-gray-700">Fees paid</span></div>
+            <span class="fwl-tag hidden sm:inline">30 days</span>
           </div>
-
-          <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
-            <span>Global Coverage</span>
-            <span class="font-bold text-gray-700">No coverage data</span>
-          </div>
+          <div id="paymentsFees" class="stat-amount mt-3 text-lg font-extrabold leading-tight tracking-tight text-gray-900 sm:text-[1.6rem]">₦0.00</div>
+          <p id="paymentsFeesNote" class="mt-1 text-xs text-gray-500">On completed payments</p>
         </div>
-
-      </div>
+      </section>
+      <script>
+        (() => {
+          const fmt = (value, code) => { try { return new Intl.NumberFormat('en-NG', { style: 'currency', currency: code, maximumFractionDigits: 2 }).format(Number(value || 0)); } catch (_) { return `${Number(value || 0).toLocaleString()} ${code}`; } };
+          const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+          const plural = (n, word) => `${n.toLocaleString('en-NG')} ${word}${n === 1 ? '' : 's'}`;
+          window.fwlLoadPaymentStats = async () => {
+            try {
+              const response = await fetch('../api/transactions/payouts-summary.php?currency=NGN', { headers: { Authorization: `Bearer ${localStorage.getItem('flow_token') || ''}`, Accept: 'application/json' } });
+              const result = await response.json();
+              if (!response.ok || !result.success) throw new Error(result.error || 'unavailable');
+              const s = result.summary, code = result.currency;
+              set('paymentsDisbursed', fmt(s.sent_total, code));
+              set('paymentsSentNote', s.sent_count ? `${plural(s.sent_count, 'payment')} completed` : 'No payments sent yet');
+              set('paymentsPendingAmount', fmt(s.processing_total, code));
+              set('paymentsPendingNote', s.processing_count ? `${plural(s.processing_count, 'payment')} on the way` : 'Nothing processing');
+              const rate = s.success_rate;
+              set('paymentsSuccessRate', rate === null ? '—' : `${Number(rate).toLocaleString('en-NG', { maximumFractionDigits: 1 })}%`);
+              const meter = document.getElementById('paymentsSuccessMeter');
+              if (meter) { meter.querySelector('i').style.width = `${rate || 0}%`; meter.setAttribute('aria-valuenow', String(rate || 0)); meter.style.setProperty('--meter', rate !== null && rate < 90 ? '#e11d48' : '#059669'); }
+              set('paymentsSuccessNote', rate === null ? 'No finished payments yet' : s.failed_count ? `${plural(s.failed_count, 'payment')} failed` : 'No failed payments');
+              set('paymentsFees', fmt(s.fees_total, code));
+              set('paymentsFeesNote', s.sent_count ? `Across ${plural(s.sent_count, 'payment')}` : 'On completed payments');
+            } catch (_) {
+              set('paymentsSentNote', 'Stats are temporarily unavailable');
+            }
+          };
+          window.fwlLoadPaymentStats();
+        })();
+      </script>
 
       <!-- Segmented Rail Tabs & Search Controls -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-gray-50/90 p-2 sm:p-2.5 rounded-2xl sm:rounded-[22px] border border-gray-200/70">
@@ -3037,7 +3024,7 @@ require_once __DIR__ . '/includes/sidebar.php';
       const money=(value,code)=>{try{return new Intl.NumberFormat('en-NG',{style:'currency',currency:code,maximumFractionDigits:8}).format(Number(value||0));}catch(_){return `${Number(value||0).toLocaleString()} ${code}`;}};
       const date=value=>value?new Date(String(value).replace(' ','T')+'Z').toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'}):'—';
       const uiStatus=value=>({successful:'Completed',pending:'Processing',failed:'Failed',refunded:'Refunded'}[value]||value);
-      const loadPayments=async()=>{const body=document.getElementById('paymentsTableBody'); try {const token=localStorage.getItem('flow_token')||''; const response=await fetch('../api/transactions/list.php?range=all&page=1&page_size=50',{headers:{Authorization:`Bearer ${token}`,Accept:'application/json'}}); const result=await response.json(); if(!response.ok||!result.success) throw new Error(result.error||'Unable to load payments.'); const rows=(result.transactions||[]).filter(row=>['withdrawal','transfer','payment','fee'].includes(row.type)); const successful=rows.filter(row=>row.status==='successful'), pending=rows.filter(row=>row.status==='pending'), currency=rows[0]?.currency||'NGN'; document.getElementById('paymentsDisbursed').textContent=money(successful.reduce((sum,row)=>sum+Number(row.amount||0),0),currency); document.getElementById('paymentsPendingAmount').textContent=money(pending.reduce((sum,row)=>sum+Number(row.amount||0),0),currency); document.querySelectorAll('.payment-filter-badge').forEach((badge,index)=>{badge.textContent=index===0?rows.length:index===1?rows.filter(row=>row.channel!=='crypto').length:index===2?rows.filter(row=>row.channel==='crypto').length:rows.filter(row=>row.type==='transfer').length;}); body.innerHTML=rows.length?rows.map(row=>{const rail=row.channel==='crypto'?'Crypto transfer':row.channel==='bank_transfer'?'Bank transfer':row.channel||'Payment'; const kind=row.channel==='crypto'?'crypto':row.type==='transfer'?'internal':'bank'; return `<tr class="hover:bg-gray-50/70 transition" data-type="${kind}" data-status="${row.status}" data-search="${esc(`${row.reference} ${row.customer_name} ${row.customer_email} ${row.currency}`.toLowerCase())}"><td class="py-4 px-4 whitespace-nowrap"><div class="font-bold text-gray-900">${esc(row.customer_name||row.provider||'Wallet transfer')}</div><div class="text-[10px] text-gray-400">${esc(row.customer_email||'')}</div></td><td class="py-4 px-4 whitespace-nowrap"><div class="font-bold text-gray-900">${esc(rail)}</div><div class="text-[10px] text-gray-400 font-mono">${esc(row.reference)}</div></td><td class="py-4 px-4 whitespace-nowrap"><div class="text-gray-900 font-medium">${esc(date(row.created_at))}</div></td><td class="py-4 px-4 whitespace-nowrap"><div class="font-semibold text-gray-900">${esc(row.currency)} wallet</div><div class="text-[10px] text-gray-400">Flowwithlit balance</div></td><td class="py-4 px-4 text-right whitespace-nowrap"><div class="font-extrabold text-gray-900 text-sm">-${esc(money(row.amount,row.currency))}</div><div class="text-[10px] text-gray-400">Fee: ${esc(money(row.fee,row.currency))}</div></td><td class="py-4 px-4 text-center"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${row.status==='successful'?'bg-emerald-50 text-emerald-700 border border-emerald-200/60':row.status==='pending'?'bg-amber-50 text-amber-700 border border-amber-200/60':'bg-rose-50 text-rose-700 border border-rose-200/60'}">${esc(uiStatus(row.status))}</span></td><td class="py-4 px-4 text-right"><a href="transactions.php" class="text-xs font-semibold text-[#0b2545] hover:underline">Details</a></td></tr>`;}).join(''):'<tr><td colspan="7" class="py-16 text-center text-sm text-gray-400">No payments or transfers yet.</td></tr>'; body.style.visibility='visible'; const apply=()=>{const type=document.querySelector('.payment-filter-btn.bg-\\[\\#0b2545\\]')?.dataset.filter||'all', status=document.getElementById('paymentStatusFilter')?.value||'all', query=(document.getElementById('paymentSearchInput')?.value||'').toLowerCase().trim(); body.querySelectorAll('tr[data-type]').forEach(row=>{const typeMatch=type==='all'||row.dataset.type===type, statusMatch=status==='all'||(status==='paid'&&row.dataset.status==='successful')||(status==='completed'&&row.dataset.status==='successful')||(status==='processing'&&row.dataset.status==='pending')||(status==='failed'&&row.dataset.status==='failed'), searchMatch=!query||row.dataset.search.includes(query); row.style.display=typeMatch&&statusMatch&&searchMatch?'':'none';});}; document.querySelectorAll('.payment-filter-btn').forEach(btn=>btn.addEventListener('click',()=>setTimeout(apply,0))); document.getElementById('paymentStatusFilter')?.addEventListener('change',apply); document.getElementById('paymentSearchInput')?.addEventListener('input',apply); apply(); } catch(error) {body.innerHTML=`<tr><td colspan="7" class="py-16 text-center text-sm text-amber-700">${esc(error.message)}</td></tr>`; body.style.visibility='visible';}}; loadPayments(); window.addEventListener('flowwithlit:dashboard-refresh',loadPayments); document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadPayments();});
+      const loadPayments=async()=>{const body=document.getElementById('paymentsTableBody'); try {const token=localStorage.getItem('flow_token')||''; const response=await fetch('../api/transactions/list.php?range=all&page=1&page_size=50',{headers:{Authorization:`Bearer ${token}`,Accept:'application/json'}}); const result=await response.json(); if(!response.ok||!result.success) throw new Error(result.error||'Unable to load payments.'); const rows=(result.transactions||[]).filter(row=>['withdrawal','transfer','payment','fee'].includes(row.type)); const successful=rows.filter(row=>row.status==='successful'), pending=rows.filter(row=>row.status==='pending'), currency=rows[0]?.currency||'NGN'; document.querySelectorAll('.payment-filter-badge').forEach((badge,index)=>{badge.textContent=index===0?rows.length:index===1?rows.filter(row=>row.channel!=='crypto').length:index===2?rows.filter(row=>row.channel==='crypto').length:rows.filter(row=>row.type==='transfer').length;}); body.innerHTML=rows.length?rows.map(row=>{const rail=row.channel==='crypto'?'Crypto transfer':row.channel==='bank_transfer'?'Bank transfer':row.channel||'Payment'; const kind=row.channel==='crypto'?'crypto':row.type==='transfer'?'internal':'bank'; return `<tr class="hover:bg-gray-50/70 transition" data-type="${kind}" data-status="${row.status}" data-search="${esc(`${row.reference} ${row.customer_name} ${row.customer_email} ${row.currency}`.toLowerCase())}"><td class="py-4 px-4 whitespace-nowrap"><div class="font-bold text-gray-900">${esc(row.customer_name||row.provider||'Wallet transfer')}</div><div class="text-[10px] text-gray-400">${esc(row.customer_email||'')}</div></td><td class="py-4 px-4 whitespace-nowrap"><div class="font-bold text-gray-900">${esc(rail)}</div><div class="text-[10px] text-gray-400 font-mono">${esc(row.reference)}</div></td><td class="py-4 px-4 whitespace-nowrap"><div class="text-gray-900 font-medium">${esc(date(row.created_at))}</div></td><td class="py-4 px-4 whitespace-nowrap"><div class="font-semibold text-gray-900">${esc(row.currency)} wallet</div><div class="text-[10px] text-gray-400">Flowwithlit balance</div></td><td class="py-4 px-4 text-right whitespace-nowrap"><div class="font-extrabold text-gray-900 text-sm">-${esc(money(row.amount,row.currency))}</div><div class="text-[10px] text-gray-400">Fee: ${esc(money(row.fee,row.currency))}</div></td><td class="py-4 px-4 text-center"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${row.status==='successful'?'bg-emerald-50 text-emerald-700 border border-emerald-200/60':row.status==='pending'?'bg-amber-50 text-amber-700 border border-amber-200/60':'bg-rose-50 text-rose-700 border border-rose-200/60'}">${esc(uiStatus(row.status))}</span></td><td class="py-4 px-4 text-right"><a href="transactions.php" class="text-xs font-semibold text-[#0b2545] hover:underline">Details</a></td></tr>`;}).join(''):'<tr><td colspan="7" class="py-16 text-center text-sm text-gray-400">No payments or transfers yet.</td></tr>'; body.style.visibility='visible'; const apply=()=>{const type=document.querySelector('.payment-filter-btn.bg-\\[\\#0b2545\\]')?.dataset.filter||'all', status=document.getElementById('paymentStatusFilter')?.value||'all', query=(document.getElementById('paymentSearchInput')?.value||'').toLowerCase().trim(); body.querySelectorAll('tr[data-type]').forEach(row=>{const typeMatch=type==='all'||row.dataset.type===type, statusMatch=status==='all'||(status==='paid'&&row.dataset.status==='successful')||(status==='completed'&&row.dataset.status==='successful')||(status==='processing'&&row.dataset.status==='pending')||(status==='failed'&&row.dataset.status==='failed'), searchMatch=!query||row.dataset.search.includes(query); row.style.display=typeMatch&&statusMatch&&searchMatch?'':'none';});}; document.querySelectorAll('.payment-filter-btn').forEach(btn=>btn.addEventListener('click',()=>setTimeout(apply,0))); document.getElementById('paymentStatusFilter')?.addEventListener('change',apply); document.getElementById('paymentSearchInput')?.addEventListener('input',apply); apply(); } catch(error) {body.innerHTML=`<tr><td colspan="7" class="py-16 text-center text-sm text-amber-700">${esc(error.message)}</td></tr>`; body.style.visibility='visible';}}; loadPayments(); window.addEventListener('flowwithlit:dashboard-refresh',loadPayments); document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadPayments();});
     })();
   </script>
 

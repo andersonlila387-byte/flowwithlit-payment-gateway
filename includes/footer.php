@@ -10,7 +10,7 @@
     <div class="cta-band__box" data-reveal>
       <h2>Ready to start flowing with smooth payments today?</h2>
       <p>Join thousands of people and sellers using Flowwithlit for easy Crypto, Naira, and instant transfers.</p>
-      <a href="register" class="btn btn--gold"><span>Create free account</span><?= arrow() ?></a>
+      <a href="register" class="btn btn--light"><span>Create free account</span><?= arrow() ?></a>
     </div>
   </div>
 </section>
@@ -35,7 +35,7 @@
         <h4>Stay updated</h4>
         <form class="subscribe" aria-label="Subscribe to updates">
           <input type="email" required placeholder="Enter your email" aria-label="Email address" />
-          <button type="submit" class="btn btn--gold btn--sm"><span>Subscribe</span></button>
+          <button type="submit" class="btn btn--navy btn--sm"><span>Subscribe</span></button>
         </form>
       </div>
     </div>

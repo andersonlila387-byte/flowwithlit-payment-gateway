@@ -4,7 +4,12 @@ require_once __DIR__ . '/../config/environment.php';
 require_once __DIR__.'/ProviderConfig.php';
 final class OnePipeClient {
     private string $baseUrl; private string $apiKey; private string $secret; private string $authProvider;
-    public function __construct(?PDO $db=null,string $environment='live') {
+    /** OnePipe request mode: "Inspect" (sandbox) for test credentials, "Live" for live ones. */
+    private string $mockMode = 'Live';
+    /** $environment: 'test', 'live', or 'auto' (use whichever environment is enabled in Admin → API Connect). */
+    public function __construct(?PDO $db=null,string $environment='auto') {
+        if($db&&$environment==='auto'){$environment=ProviderConfig::activeEnvironment($db,'onepipe')??'live';}
+        $this->mockMode=(string)(getenv('ONEPIPE_MOCK_MODE')?:($environment==='test'?'Inspect':'Live'));
         if($db){$config=new ProviderConfig($db,'onepipe',$environment);$this->baseUrl=rtrim($config->get('base_url',false)?:'https://api.onepipe.io','/');$this->apiKey=$config->get('api_key');$this->secret=$config->get('api_secret');$this->authProvider=$config->get('auth_provider');return;}
         $this->baseUrl = rtrim(getenv('ONEPIPE_API_URL') ?: 'https://api.onepipe.io', '/');
         $this->apiKey = trim((string)(getenv('ONEPIPE_API_KEY') ?: '')); $this->secret = trim((string)(getenv('ONEPIPE_API_SECRET') ?: '')); $this->authProvider = trim((string)(getenv('ONEPIPE_AUTH_PROVIDER') ?: ''));
@@ -40,7 +45,7 @@ final class OnePipeClient {
     private function transactionPayload(string $requestType,string $requestRef,string $transactionRef,array $customer,array $details, float $amount=0): array {
         $parts=preg_split('/\s+/',trim((string)($customer['name']??'')),2);
         return ['request_ref'=>$requestRef,'request_type'=>$requestType,'request_mode'=>'transact','auth'=>['type'=>'bank.account','secure'=>$this->secureValue((string)($details['account_number']??'')),'auth_provider'=>$this->authProvider,'route_mode'=>null],'transaction'=>[
-            'mock_mode'=>getenv('ONEPIPE_MOCK_MODE')?:'Live','transaction_ref'=>$transactionRef,'transaction_desc'=>'Flowwithlit Nigerian bank transfer','transaction_ref_parent'=>null,'amount'=>$amount,
+            'mock_mode'=>$this->mockMode,'transaction_ref'=>$transactionRef,'transaction_desc'=>'Flowwithlit Nigerian bank transfer','transaction_ref_parent'=>null,'amount'=>$amount,
             'customer'=>['customer_ref'=>(string)($customer['phone']??$customer['email']??$transactionRef),'firstname'=>$parts[0]??'Flowwithlit','surname'=>$parts[1]??'Customer','email'=>(string)($customer['email']??''),'mobile_no'=>(string)($customer['phone']??'')],
             'meta'=>['country'=>'NG'],'details'=>$details
         ]];
@@ -58,7 +63,7 @@ final class OnePipeClient {
         if (!$this->configured()) throw new RuntimeException('OnePipe is not configured.');
         $transactionRef = 'FWL-' . strtoupper(bin2hex(random_bytes(10)));
         $payload = ['request_ref'=>$requestRef,'request_type'=>'account opening','auth'=>['auth_provider'=>$this->authProvider], 'transaction'=>[
-            'mock_mode'=>getenv('ONEPIPE_MOCK_MODE') ?: 'Live','transaction_ref'=>$transactionRef,'transaction_desc'=>'Flowwithlit wallet account opening','transaction_ref_parent'=>'',
+            'mock_mode'=>$this->mockMode,'transaction_ref'=>$transactionRef,'transaction_desc'=>'Flowwithlit wallet account opening','transaction_ref_parent'=>'',
             'amount'=>0,'customer'=>['customer_ref'=>$customer['phone'] ?: $customer['email'],'firstname'=>$customer['first_name'],'surname'=>$customer['last_name'],'email'=>$customer['email'],'mobile_no'=>$customer['phone']],
             'meta'=>['expires_on'=>'2090-12-31'],'details'=>['name_on_account'=>$customer['name']]
         ]];

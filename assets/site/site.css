@@ -51,6 +51,9 @@ a { color: inherit; text-decoration: none; }
 .btn--navy { background: var(--navy); color: var(--white); }
 .btn--navy .btn__icon { background: var(--white); color: var(--navy); }
 .btn--navy:hover { background: var(--navy-700); }
+.btn--light { background: var(--white); color: var(--navy); }
+.btn--light .btn__icon { background: var(--navy); color: var(--white); }
+.btn--light:hover { background: #eef4ff; box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.45); }
 .btn--ghost { background: var(--white); color: var(--navy); border: 1px solid var(--line); }
 .btn--ghost .btn__icon { background: var(--surface); }
 .btn--ghost:hover { border-color: var(--navy); }
@@ -165,8 +168,6 @@ details summary::-webkit-details-marker { display: none; }
 .text-xs { font-size: 0.8125rem !important; }
 body p { line-height: 1.7; }
 /* Premium accents: primary white buttons in dark heroes become gold */
-.hero-bg a.bg-white.rounded-full { background: var(--gold) !important; color: var(--navy) !important; }
-.hero-bg a.bg-white.rounded-full:hover { background: var(--gold-hover) !important; }
 .hero-bg h1 { letter-spacing: -0.03em; }
 
 @media (max-width: 1024px) {

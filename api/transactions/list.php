@@ -15,6 +15,7 @@ $summaryStmt = $pdo->prepare("SELECT
     {$base}"); $summaryStmt->execute($params); $summary = $summaryStmt->fetch() ?: [];
 $sql = "SELECT t.id,t.uuid,t.reference,t.type,t.status,t.currency_code,t.amount,t.fee_amount,t.provider,t.created_at,t.completed_at,
     p.customer_name,p.customer_email,p.status payment_status, card.last4,
+    (SELECT dw.user_id FROM wallets dw WHERE dw.id=t.destination_wallet_id) dest_user_id,
     CASE WHEN ct.id IS NOT NULL THEN 'card' WHEN c.kind='crypto' OR t.type='swap' THEN 'crypto'
          WHEN JSON_UNQUOTE(JSON_EXTRACT(t.metadata, '$.channel'))='apple_pay' THEN 'apple_pay' ELSE 'bank_transfer' END channel
     {$base} ORDER BY t.created_at DESC, t.id DESC LIMIT {$f['pageSize']} OFFSET {$offset}";
@@ -24,7 +25,9 @@ foreach ($stmt->fetchAll() as $row) {
     $rows[] = ['id'=>(int)$row['id'],'uuid'=>$row['uuid'],'reference'=>$row['reference'],'type'=>$row['type'],'status'=>$uiStatus,'raw_status'=>$raw,
         'currency'=>$row['currency_code'],'amount'=>(string)$row['amount'],'fee'=>(string)$row['fee_amount'],'net'=>(string)((float)$row['amount']-(float)$row['fee_amount']),
         'channel'=>$row['channel'],'provider'=>$row['provider'] ?: 'Flowwithlit','customer_name'=>$row['customer_name'] ?: '—','customer_email'=>maskEmail($row['customer_email'] ?? null),
-        'card_last4'=>$row['last4'] ?: null,'created_at'=>$row['created_at'],'completed_at'=>$row['completed_at']];
+        'card_last4'=>$row['last4'] ?: null,
+        // Money direction for this user: 'in' when it lands in one of their wallets, 'swap' for conversions, otherwise 'out'.
+        'direction'=>$row['type']==='swap' ? 'swap' : ((int)($row['dest_user_id'] ?? 0) === $userId ? 'in' : 'out'),'created_at'=>$row['created_at'],'completed_at'=>$row['completed_at']];
 }
 $successful=(int)($summary['successful_count']??0); $failed=(int)($summary['failed_count']??0); $den=$successful+$failed;
 $currencies=$pdo->query("SELECT code,name,kind,decimals FROM currencies WHERE is_enabled=1 ORDER BY kind='crypto', code")->fetchAll();

@@ -78,10 +78,16 @@
     const personalHeading = addText(root, 'h3', 'Personal details');
     personalHeading.className = 'identity-section-title';
     const personal = document.createElement('dl'); personal.className = 'identity-detail-list';
-    addDetail(personal, 'Full name', data.identity.owner_name); addDetail(personal, 'Email address', data.identity.owner_email); addDetail(personal, 'Phone number', data.identity.phone); addDetail(personal, 'Account type', submission.account_type === 'business' ? 'Business' : 'Individual'); root.append(personal);
-    const businessHeading = addText(root, 'h3', 'Business details'); businessHeading.className = 'identity-section-title';
-    const business = document.createElement('dl'); business.className = 'identity-detail-list';
-    addDetail(business, 'Business name', data.business.name); addDetail(business, 'Business type', title(data.business.type)); addDetail(business, 'Industry', data.business.industry); addDetail(business, 'Website', data.business.website); root.append(business);
+    addDetail(personal, 'Full name', data.identity.owner_name); addDetail(personal, 'Email address', data.identity.owner_email); addDetail(personal, 'Phone number', data.identity.phone); addDetail(personal, 'Date of birth', data.identity.date_of_birth); addDetail(personal, 'Home address', data.identity.address); addDetail(personal, 'Account type', submission.account_type === 'business' ? 'Business' : 'Personal'); root.append(personal);
+    if (data.business) {
+      const businessHeading = addText(root, 'h3', 'Business details'); businessHeading.className = 'identity-section-title';
+      const business = document.createElement('dl'); business.className = 'identity-detail-list';
+      const stage = { starter: 'Starter business', registered: 'Registered business' }[data.business.stage];
+      addDetail(business, 'Business name', data.business.name); addDetail(business, 'Business type', stage || title(data.business.type)); addDetail(business, 'CAC registration number', data.business.registration_number); addDetail(business, 'Industry', data.business.industry); addDetail(business, 'Website', data.business.website);
+      const payout = data.business.payout;
+      if (payout) addDetail(business, 'Payout account', `${payout.account_name || '—'} · ${payout.bank_name || '—'} · ••••${payout.account_last4} — ${payout.verified ? 'Name confirmed by bank' : 'Not verified (typed by customer)'}`);
+      root.append(business);
+    }
     const docHeading = addText(root, 'h3', 'Submitted documents'); docHeading.className = 'identity-section-title'; root.append(docHeading);
     const docs = document.createElement('div'); docs.className = 'identity-documents';
     if (!(data.documents || []).length) addText(docs, 'p', 'No documents were submitted.', 'dashboard-empty');

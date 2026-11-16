@@ -98,7 +98,7 @@ $navLinks = [
     </nav>
     <div class="site-header__actions">
       <a href="login" class="site-header__signin">Sign in</a>
-      <a href="register" class="btn btn--gold btn--sm"><span>Create account</span><?= arrow() ?></a>
+      <a href="register" class="btn btn--navy btn--sm"><span>Create account</span><?= arrow() ?></a>
       <button type="button" class="site-header__toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span></button>
     </div>
   </div>
@@ -111,7 +111,7 @@ $navLinks = [
     <?php endforeach; ?>
   </nav>
   <div class="mobile-menu__ctas">
-    <a href="register" class="btn btn--gold"><span>Create free account</span><?= arrow() ?></a>
+    <a href="register" class="btn btn--navy"><span>Create free account</span><?= arrow() ?></a>
     <a href="login" class="btn btn--ghost"><span>Sign in</span><?= arrow() ?></a>
   </div>
 </div>

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/security.php';
+require_once __DIR__ . '/../../config/countries.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonResponse(['success' => false, 'error' => 'Method not allowed.'], 405);
 $input = getJsonInput();
@@ -16,7 +17,7 @@ foreach (['full_name' => 150, 'phone' => 30, 'address_line1' => 191, 'city' => 1
     }
     $values[$field] = trim($value);
 }
-if (!in_array($values['country_code'], ['NG', 'GH', 'KE', 'ZA'], true)) jsonResponse(['success' => false, 'error' => 'Please select a supported country.'], 422);
+if (!in_array($values['country_code'], array_column(approvedCountries($pdo), 'code'), true)) jsonResponse(['success' => false, 'error' => 'Please select a supported country.'], 422);
 if (!preg_match('/^\+?[0-9 ()-]{7,30}$/', $values['phone']) || strlen(preg_replace('/\D/', '', $values['phone'])) < 7) jsonResponse(['success' => false, 'error' => 'Please enter a valid phone number.'], 422);
 // Email is displayed for confirmation; changing a verified email requires its own verification flow.
 if (($input['email'] ?? '') !== $user['email']) jsonResponse(['success' => false, 'error' => 'Please use your account email address.'], 422);

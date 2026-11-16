@@ -68,14 +68,21 @@
           window.refreshIcons();
         }
         window.FlowAvatar.render(user);
-        if (!user.onboarding_complete && currentAppPage !== 'onboarding') { window.location.replace('onboarding'); return; }
+        // Send unverified users to onboarding once; after that they can use the app at
+        // their current (unverified) limits, which AccountLimits enforces server-side.
+        const onboardingSeenKey = `fwl_onboarding_seen_${user.uuid}`;
+        let onboardingSeen = false;
+        try { onboardingSeen = localStorage.getItem(onboardingSeenKey) === '1'; if (currentAppPage === 'onboarding') localStorage.setItem(onboardingSeenKey, '1'); } catch (e) {}
+        if (!user.onboarding_complete && !onboardingSeen && currentAppPage !== 'onboarding') { window.location.replace('onboarding'); return; }
         window.dispatchEvent(new CustomEvent('flowwithlit:session-ready', { detail: user }));
       } catch (error) { leaveApp(); return; }
 
-      // Let the liquid skeleton remain long enough to feel intentional, then reveal the page.
+      // Session is confirmed: reveal the page straight away (no artificial delay).
       const flowPreloader = document.getElementById('flowPreloader');
       if (flowPreloader) {
-        window.setTimeout(() => flowPreloader.classList.add('is-complete'), 420);
+        requestAnimationFrame(() => flowPreloader.classList.add('is-complete'));
+        flowPreloader.addEventListener('transitionend', () => flowPreloader.remove(), { once: true });
+        window.setTimeout(() => flowPreloader.remove(), 600); // fallback if the fade never reports finishing (e.g. background tab)
       }
 
       // Header Top Tab Switcher (if tabs exist on page)
@@ -180,7 +187,15 @@
         const data = await response.json(); if(!data.success) return;
         const count = data.unread_count || 0; notificationUnreadText.textContent = count ? `${count} unread update${count===1?'':'s'}` : 'You are all caught up';
         notificationBadge.textContent=count; notificationBadge.classList.toggle('hidden',!count);
-        notificationFeed.innerHTML = data.notifications.length ? data.notifications.map((item) => `<a href="${escapeNotification(item.action_url || 'notifications.php')}" class="notification-item flex gap-3 rounded-xl ${item.read?'':'bg-sky-50/70 dark:bg-sky-950/25'} p-3"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-100 dark:bg-sky-950/60 text-sky-600"><i data-lucide="bell" class="w-4 h-4"></i></span><span class="min-w-0 flex-1"><strong class="block text-sm text-gray-900 dark:text-white">${escapeNotification(item.title)}</strong><small class="block mt-0.5 text-xs text-gray-500 dark:text-gray-300">${escapeNotification(item.body)}</small></span>${item.read?'':'<span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-sky-500"></span>'}</a>`).join('') : '<div class="py-8 text-center text-xs text-gray-400">No notifications yet.</div>';
+        // Dropdown shows a short preview only; the full message opens on the notifications page.
+        const timeAgo = (value) => {
+          const date = new Date(String(value || '').replace(' ', 'T')); if (isNaN(date)) return '';
+          const minutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+          if (minutes < 1) return 'Just now'; if (minutes < 60) return `${minutes}m`;
+          const hours = Math.round(minutes / 60); if (hours < 24) return `${hours}h`;
+          const days = Math.round(hours / 24); return days === 1 ? 'Yesterday' : `${days}d`;
+        };
+        notificationFeed.innerHTML = data.notifications.length ? data.notifications.slice(0, 6).map((item) => `<a href="notifications.php?id=${encodeURIComponent(item.id)}" class="notification-item flex gap-3 px-4 py-3 ${item.read?'hover:bg-gray-50 dark:hover:bg-gray-800/70':'bg-sky-50/70 dark:bg-sky-950/25 hover:bg-sky-50'} transition"><span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#faf5e8] text-[#8a6a1d]"><i data-lucide="bell" class="w-4 h-4"></i></span><span class="min-w-0 flex-1"><span class="flex items-start justify-between gap-3"><strong class="truncate text-sm text-gray-900 dark:text-white">${escapeNotification(item.title || 'Notification')}</strong><time class="whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">${escapeNotification(timeAgo(item.created_at))}</time></span><small class="notification-preview mt-0.5 text-xs text-gray-600 dark:text-gray-300">${escapeNotification(item.body)}</small></span>${item.read?'':'<span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-sky-500" aria-label="Unread"></span>'}</a>`).join('') : '<div class="py-8 text-center text-xs text-gray-400">No notifications yet.</div>';
         window.refreshIcons?.();
       };
       loadNotifications().catch(() => { if(notificationFeed) notificationFeed.innerHTML='<div class="py-8 text-center text-xs text-gray-400">Unable to load notifications.</div>'; });

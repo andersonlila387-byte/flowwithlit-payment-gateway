@@ -25,14 +25,15 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Smooch+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: { 
-            sans: ['"Smooch Sans"', 'sans-serif'],
+            sans: ['Satoshi', 'system-ui', 'sans-serif'],
             mono: ['"IBM Plex Mono"', 'monospace']
           },
           colors: {
@@ -53,28 +54,25 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
   
   <style>
     html {
-      font-size: 17px;
+      font-size: 16px;
     }
     body { 
-      font-family: 'Smooch Sans', sans-serif; 
-      font-weight: 600;
-      letter-spacing: 0.025em;
+      font-family: 'Satoshi', system-ui, sans-serif; 
+      font-weight: 500;
       color: #0b2545; 
       background-color: #ffffff;
       -webkit-font-smoothing: antialiased;
     }
     .text-xs {
-      font-size: 0.875rem !important;
+      font-size: 0.8125rem !important;
       font-weight: 600;
-      letter-spacing: 0.02em;
     }
     .text-\[10px\], .text-\[11px\] {
       font-size: 0.8125rem !important;
       font-weight: 600;
-      letter-spacing: 0.02em;
     }
     .text-sm {
-      font-size: 1.025rem !important;
+      font-size: 0.9375rem !important;
     }
     .hero-bg {
       background-image: linear-gradient(180deg, rgba(10, 18, 30, 0.75) 0%, rgba(10, 18, 30, 0.9) 100%), url('images/75nmeaVY0yWUShlVFysSmJb9Q.png');
@@ -82,13 +80,19 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
       background-position: center;
     }
     .otp-field {
-      width: calc((100% - 2.5rem) / 6);
-      flex: 1 1 0;
-      height: 3.25rem;
+      /* Equal width and height = a true circle; shrinks on narrow phones */
+      /* 100vw - 3rem page padding - 3.75rem of gaps, split across 6 boxes */
+      --otp-size: min(3.5rem, calc((100vw - 6.75rem) / 6));
+      width: var(--otp-size);
+      height: var(--otp-size);
+      min-width: 0;
+      line-height: 1;
+      flex: 0 0 auto;
+      padding: 0;
       text-align: center;
       font-size: 1.25rem;
       font-weight: 700;
-      border-radius: 0.75rem;
+      border-radius: 999px;
       border: 1px solid #cbd5e1;
       background-color: #f8fafc;
       color: #0b2545;
@@ -128,15 +132,14 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
     <!-- COLUMN 2: VERIFICATION CONTAINER (Right Side) -->
     <div class="lg:col-span-7 flex flex-col justify-between p-6 sm:p-10 md:p-14 bg-white min-h-screen">
       
-      <!-- Top Spacer -->
-      <!-- Brand mark: stays above the form without adding a tall header on mobile. -->
-      <a href="index" class="flex items-center justify-center lg:justify-end pt-2 sm:pt-3 pb-2" aria-label="Flowwithlit home">
-        <img src="logo/flowwithlit-wordmark.png" alt="Flowwithlit" class="h-8 sm:h-9 w-auto object-contain" />
-      </a>
-
       <!-- Center Content Container -->
       <div class="max-w-md w-full mx-auto my-auto py-4">
-        
+
+        <!-- Brand mark: centred directly above the form -->
+        <a href="./" class="flex items-center justify-center mb-8" aria-label="Flowwithlit home">
+          <img src="logo/flowwithlit-wordmark.png" alt="Flowwithlit" class="h-9 sm:h-10 w-auto object-contain" />
+        </a>
+
         <!-- Header -->
         <div class="mb-6 text-center sm:text-left">
           <div class="w-12 h-12 rounded-2xl bg-[#eef4ff] text-[#0b2545] border border-blue-200 flex items-center justify-center sm:mx-0 mx-auto mb-4">
@@ -151,7 +154,7 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
 
         <!-- OTP Input Form -->
         <form id="otp-form" class="space-y-6">
-          <div class="flex w-full items-center gap-2">
+          <div class="flex w-full items-center justify-center gap-3">
             <input type="text" maxlength="1" class="otp-field" data-index="0" autofocus autocomplete="off" inputmode="numeric" />
             <input type="text" maxlength="1" class="otp-field" data-index="1" autocomplete="off" inputmode="numeric" />
             <input type="text" maxlength="1" class="otp-field" data-index="2" autocomplete="off" inputmode="numeric" />
@@ -160,12 +163,12 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
             <input type="text" maxlength="1" class="otp-field" data-index="5" autocomplete="off" inputmode="numeric" />
           </div>
 
-          <button type="submit" id="submit-btn" class="w-full flex items-center justify-between bg-[#0b2545] hover:bg-[#071930] text-white text-xs font-semibold py-3.5 px-5 rounded-xl shadow-md transition group">
+          <button type="submit" id="submit-btn" class="w-full group inline-flex items-center justify-between bg-[#0b2545] hover:bg-[#071930] text-white text-xs font-semibold py-3.5 pl-6 pr-2 rounded-full shadow-md transition-all duration-300">
             <span id="btn-text">Verify &amp; Continue</span>
-            <div id="btn-icon-box" class="w-7 h-7 rounded-full bg-white text-[#0b2545] flex items-center justify-center transition-transform group-hover:translate-x-0.5">
-              <svg id="btn-arrow" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span id="btn-icon-box" class="w-7 h-7 rounded-full bg-white text-[#0b2545] flex items-center justify-center font-bold shrink-0 transition-transform duration-300 group-hover:scale-105">
+              <svg id="btn-arrow" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
               <svg id="btn-spinner" class="w-3.5 h-3.5 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-            </div>
+            </span>
           </button>
         </form>
 
@@ -354,7 +357,7 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
           showAlert(data.message || 'Verification successful! Redirecting...', false);
           setTimeout(() => {
             const savedUser = JSON.parse(localStorage.getItem('flow_user') || '{}');
-            window.location.href = type === '2fa' && savedUser.onboarding_complete ? 'app/index.php' : 'app/onboarding.php';
+            window.location.href = type === '2fa' && savedUser.onboarding_complete ? 'app/' : 'app/onboarding.php';
           }, 1200);
         } else {
           showAlert(data.error || 'Invalid or expired verification code.');

@@ -12,7 +12,7 @@ $sidebarMenus = [
   [
     'id'       => 'dashboard',
     'title'    => 'Dashboard',
-    'url'      => 'index.php',
+    'url'      => './',
     'hasBadge' => false,
     'badgeText'=> '',
     'icon'     => '<i data-lucide="layout-grid" class="w-5 h-5"></i>'
@@ -86,20 +86,19 @@ $sidebarMenus = [
 ?>
 
 <!-- Fixed Sidebar Dock (Hidden on mobile, never scrolls, equal space top & bottom, menu centralized) -->
-<aside class="hidden md:flex w-20 lg:w-24 h-full flex-shrink-0 flex-col items-center justify-center px-2 py-6 border-r border-gray-100 dark:border-gray-800/80 bg-white dark:bg-[#09182b] z-30 select-none transition-colors duration-200">
+<aside class="hidden md:flex w-20 lg:w-24 h-full flex-shrink-0 flex-col items-center justify-center px-2 py-6 bg-white dark:bg-[#09182b] z-30 select-none transition-colors duration-200">
   
   <!-- Centralized Menu Items (my-auto centers vertically with equal top/bottom spacing) -->
   <div id="sidebarMenu" class="my-auto flex flex-col items-center justify-center gap-2.5 select-none">
     
     <?php foreach ($sidebarMenus as $menu): 
       $isActive = ($activePage === $menu['id']);
-      $activeClasses = $isActive 
-        ? 'bg-[#0b2545] dark:bg-[#134074] text-white shadow-sm ring-1 ring-blue-400/30' 
-        : 'bg-white dark:bg-[#0c1f36] hover:bg-[#eef4ff] dark:hover:bg-[#13304f] border border-gray-200/80 dark:border-gray-700/80 text-gray-600 dark:text-gray-300 hover:text-[#0b2545] dark:hover:text-white shadow-sm';
+      // Plain icons (no circles); the active page gets a gold marker on the left edge.
+      $activeClasses = $isActive ? 'is-active' : '';
     ?>
       <div class="relative group flex items-center">
         <a href="<?= htmlspecialchars($menu['url']) ?>" 
-           class="sidebar-item w-10 h-10 rounded-full <?= $activeClasses ?> flex items-center justify-center transition hover:scale-105 active:scale-95 relative" 
+           class="sidebar-item w-11 h-11 <?= $activeClasses ?> flex items-center justify-center transition-colors"<?= $isActive ? ' aria-current="page"' : '' ?> 
            data-title="<?= htmlspecialchars($menu['title']) ?>" 
            title="<?= htmlspecialchars($menu['title']) ?>">
           <?= $menu['icon'] ?>

@@ -19,5 +19,11 @@ final class ProviderConfig {
         if(($required&&$v==='')||str_contains($v,"\r")||str_contains($v,"\n"))throw new DomainException('Provider credentials are incomplete.');
         return $v;
     }
+    /** The environment ('test' or 'live') an enabled provider is configured for in Admin → API Connect, or null. */
+    public static function activeEnvironment(PDO $db,string $provider):?string {
+        $q=$db->prepare('SELECT environment FROM admin_integration_connections WHERE provider_key=? AND enabled=1 LIMIT 1');$q->execute([$provider]);
+        $env=$q->fetchColumn();
+        return in_array($env,['test','live'],true)?$env:null;
+    }
     public function __debugInfo():array{return ['provider'=>$this->provider,'environment'=>$this->environment,'credentials'=>'[redacted]'];}
 }

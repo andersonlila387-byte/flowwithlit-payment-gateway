@@ -1,0 +1,27 @@
+/* Shared stat-card pieces (dashboard + payments): icon chips, period tags, meters, empty-state links. */
+.fwl-chip { display: grid; place-items: center; flex: none; width: 2rem; height: 2rem; border-radius: .75rem; }
+.fwl-chip--green { background: #e7f8f0; color: #059669; }
+.fwl-chip--blue { background: #e8f1fd; color: #2563eb; }
+.fwl-chip--rose { background: #fdebef; color: #e11d48; }
+.fwl-chip--amber { background: #fdf4e3; color: #b7791f; }
+.fwl-chip--slate { background: #eef2f6; color: #475569; }
+.dark .fwl-chip--green { background: rgba(16,185,129,.15); color: #34d399; }
+.dark .fwl-chip--blue { background: rgba(59,130,246,.15); color: #60a5fa; }
+.dark .fwl-chip--rose { background: rgba(244,63,94,.15); color: #fb7185; }
+.dark .fwl-chip--amber { background: rgba(201,164,74,.16); color: #e9c97a; }
+.dark .fwl-chip--slate { background: rgba(148,163,184,.14); color: #cbd5e1; }
+
+.fwl-tag { border-radius: 999px; padding: .2rem .55rem; font-size: .68rem; font-weight: 700; color: #64748b; background: #f1f5f9; white-space: nowrap; }
+.dark .fwl-tag { color: #94a3b8; background: #09182b; }
+
+.fwl-meter { height: .5rem; border-radius: 999px; background: #f1f5f9; overflow: hidden; }
+.fwl-meter i { display: block; height: 100%; border-radius: inherit; background: var(--meter, #e11d48); transition: width .4s ease; }
+.dark .fwl-meter { background: #09182b; }
+
+.fwl-empty { display: flex; align-items: center; justify-content: space-between; gap: .5rem; border: 1px dashed #cbd5e1; border-radius: .9rem; padding: .6rem .8rem; font-size: .75rem; font-weight: 600; color: #0b2545; transition: background .15s, border-color .15s; }
+.fwl-empty:hover { background: #f8fafc; border-color: #0b2545; }
+.dark .fwl-empty { color: #e2e8f0; border-color: #29486b; }
+.dark .fwl-empty:hover { background: #09182b; border-color: #c9a44a; }
+
+.stat-amount { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .fwl-meter i { transition: none; } }
