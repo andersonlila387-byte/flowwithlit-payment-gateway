@@ -20,8 +20,12 @@ final class OnePipeClient {
         $body=json_encode($payload, JSON_UNESCAPED_SLASHES);
         if ($body===false) throw new RuntimeException('Unable to encode OnePipe request.');
         $signature=md5($requestRef.';'.$this->secret);
+        // The API key must only ever go to OnePipe over verified HTTPS, whatever base URL is configured.
+        $host=strtolower((string)parse_url($this->baseUrl,PHP_URL_HOST));
+        if(parse_url($this->baseUrl,PHP_URL_SCHEME)!=='https'||!($host==='onepipe.io'||str_ends_with($host,'.onepipe.io')))throw new RuntimeException('OnePipe base URL must be an https://*.onepipe.io address.');
         $ch=curl_init($this->baseUrl.'/v2/transact'.($path!==''?'/'.$path:''));
-        curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>8,CURLOPT_TIMEOUT=>25,CURLOPT_HTTPHEADER=>['Content-Type: application/json','Accept: application/json','Authorization: Bearer '.$this->apiKey,'request-ref: '.$requestRef,'Signature: '.$signature],CURLOPT_POSTFIELDS=>$body]);
+        curl_setopt_array($ch,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>8,CURLOPT_TIMEOUT=>25,
+            CURLOPT_FOLLOWLOCATION=>false,CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS,CURLOPT_SSL_VERIFYPEER=>true,CURLOPT_SSL_VERIFYHOST=>2,CURLOPT_HTTPHEADER=>['Content-Type: application/json','Accept: application/json','Authorization: Bearer '.$this->apiKey,'request-ref: '.$requestRef,'Signature: '.$signature],CURLOPT_POSTFIELDS=>$body]);
         $raw=curl_exec($ch); $error=curl_error($ch); $code=(int)curl_getinfo($ch,CURLINFO_HTTP_CODE); curl_close($ch);
         if ($raw===false || $error) throw new RuntimeException('OnePipe request failed.');
         $decoded=json_decode((string)$raw,true);

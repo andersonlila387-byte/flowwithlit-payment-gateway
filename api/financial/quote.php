@@ -31,7 +31,9 @@ if ($providerUrl !== '') {
     $query = http_build_query(['base'=>$from, 'quote'=>$to]);
     $url = $providerUrl . (str_contains($providerUrl, '?') ? '&' : '?') . $query;
     $ch = curl_init($url);
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_TIMEOUT=>5, CURLOPT_CONNECTTIMEOUT=>3, CURLOPT_HTTPHEADER=>['Accept: application/json']]);
+    // Rates move money values, so only accept them over verified HTTPS without redirects.
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true, CURLOPT_TIMEOUT=>5, CURLOPT_CONNECTTIMEOUT=>3, CURLOPT_HTTPHEADER=>['Accept: application/json'],
+        CURLOPT_FOLLOWLOCATION=>false, CURLOPT_PROTOCOLS=>CURLPROTO_HTTPS, CURLOPT_SSL_VERIFYPEER=>true, CURLOPT_SSL_VERIFYHOST=>2]);
     $body = curl_exec($ch);
     $http = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);

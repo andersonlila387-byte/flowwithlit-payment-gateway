@@ -12,9 +12,23 @@ require_once __DIR__ . '/includes/sidebar.php';
 ?>
 
     <!-- Scrollable Main Content Area -->
-    <style>#cardsPageMain.cards-live-pending{visibility:hidden}</style>
-    <main id="cardsPageMain" class="cards-live-pending flex-1 h-full overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-6 flex flex-col gap-6">
-      
+    <style>
+      #cardsPageMain.cards-live-pending{visibility:hidden}
+      /* Cards are not live yet (no card-issuing provider). Keep the design visible but not usable. */
+      #cardsPageMain > :not(#cardsComingSoon){pointer-events:none;user-select:none;filter:blur(1.5px);opacity:.55}
+    </style>
+    <main id="cardsPageMain" class="cards-live-pending flex-1 h-full overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-6 flex flex-col gap-6" aria-describedby="cardsComingSoonText">
+
+      <!-- Floating "Coming soon" notice. Remove this block and the CSS rule above once a card provider is connected. -->
+      <div id="cardsComingSoon" class="sticky top-[30vh] z-30 h-0 flex justify-center" role="status">
+        <div class="mx-4 w-full max-w-sm rounded-3xl border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-[#0c1f36]/95 p-6 text-center shadow-2xl backdrop-blur">
+          <span class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-950/60 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-200">Coming soon</span>
+          <h2 class="mt-3 text-lg font-bold text-gray-900 dark:text-white">Flowwithlit cards are on the way</h2>
+          <p id="cardsComingSoonText" class="mt-2 text-sm text-gray-500 dark:text-gray-300">Virtual and physical cards with spending controls are not available yet. We'll let you know as soon as you can create one.</p>
+          <a href="wallets.php" class="mt-5 inline-flex items-center justify-center rounded-full bg-[#0b2545] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#132847]">Go to wallets</a>
+        </div>
+      </div>
+
       <!-- Top Title & Quick Action Header -->
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-shrink-0">
         <div>

@@ -17,11 +17,20 @@ require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../services/PaystackClient.php';
 require_once __DIR__ . '/../../services/DepositService.php';
+require_once __DIR__ . '/../../services/PaystackCheckout.php';
 header('Cache-Control: no-store');
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') jsonResponse(['success' => false, 'error' => 'Method not allowed.'], 405);
 
-$raw = (string) file_get_contents('php://input');
+// Optional extra lock: only accept Paystack's published webhook IPs. Set PAYSTACK_WEBHOOK_IPS to a
+// comma-separated list (Paystack docs: 52.31.139.75, 52.49.173.169, 52.214.14.220) once you've confirmed
+// your host passes the real client IP in REMOTE_ADDR. The signature check below always applies.
+$allowedIps = array_filter(array_map('trim', explode(',', (string) (getenv('PAYSTACK_WEBHOOK_IPS') ?: ''))));
+if ($allowedIps && !in_array((string) ($_SERVER['REMOTE_ADDR'] ?? ''), $allowedIps, true)) {
+    jsonResponse(['success' => false, 'error' => 'Untrusted source.'], 403);
+}
+
+$raw = (string) file_get_contents('php://input', false, null, 0, 1048577); // read at most 1 MB + 1 byte
 if ($raw === '' || strlen($raw) > 1048576) jsonResponse(['success' => false, 'error' => 'Invalid payload.'], 400);
 
 $pdo = Database::getInstance();
@@ -40,6 +49,20 @@ if (!$client->validSignature($raw, (string) ($_SERVER['HTTP_X_PAYSTACK_SIGNATURE
 
 $event = json_decode($raw, true);
 $data = is_array($event['data'] ?? null) ? $event['data'] : [];
+
+// Payment-link / hosted-checkout payments (card or Paystack bank transfer) carry our FWLP- reference.
+$checkoutReference = strtoupper((string) ($data['reference'] ?? ''));
+if (($event['event'] ?? '') === 'charge.success' && str_starts_with($checkoutReference, 'FWLP-')) {
+    try {
+        $result = (new PaystackCheckout($pdo, $client))->settle($checkoutReference, 'paystack_webhook');
+        if ($result['status'] === 'unknown') error_log('Paystack webhook: unknown checkout reference ' . $checkoutReference);
+        jsonResponse(['success' => true, 'status' => $result['status']]);
+    } catch (Throwable $e) {
+        error_log('Paystack webhook: checkout settle failed for ' . $checkoutReference . ': ' . get_class($e) . ' ' . $e->getMessage());
+        jsonResponse(['success' => false, 'error' => 'Try again.'], 503); // Paystack retries
+    }
+}
+
 if (($event['event'] ?? '') !== 'charge.success' || ($data['channel'] ?? '') !== 'dedicated_nuban') {
     jsonResponse(['success' => true, 'ignored' => true]); // not a dedicated-account deposit
 }
