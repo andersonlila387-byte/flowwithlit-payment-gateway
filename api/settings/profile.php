@@ -8,7 +8,9 @@ $session = requireSettingsUser($pdo, $input);
 $userId = (int) $session['user']['id'];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
-    $statement = $pdo->prepare('SELECT u.uuid,u.full_name,u.email,u.phone,u.avatar_url,u.two_factor_enabled,u.kyc_tier,u.status,u.withdrawal_pin_hash,b.legal_name,b.trading_name FROM users u LEFT JOIN businesses b ON b.id=(SELECT id FROM businesses WHERE owner_user_id=u.id ORDER BY id ASC LIMIT 1) WHERE u.id=? LIMIT 1');
+    require_once __DIR__ . '/../../services/TotpService.php';
+    TotpService::signInRequiresCode($pdo, $userId); // clears a 2FA flag that has no authenticator behind it
+    $statement = $pdo->prepare('SELECT u.uuid,u.full_name,u.email,u.phone,u.avatar_url,u.two_factor_enabled,u.kyc_tier,u.status,u.withdrawal_pin_hash,(u.password_hash IS NOT NULL AND u.password_hash<>\'\') has_password,b.legal_name,b.trading_name FROM users u LEFT JOIN businesses b ON b.id=(SELECT id FROM businesses WHERE owner_user_id=u.id ORDER BY id ASC LIMIT 1) WHERE u.id=? LIMIT 1');
     $statement->execute([$userId]);
     $profile = $statement->fetch();
     if (!$profile) jsonResponse(['success'=>false, 'error'=>'Your profile could not be found.'], 404);

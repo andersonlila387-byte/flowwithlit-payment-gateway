@@ -28,8 +28,12 @@ class PrivateStorage {
         return 'FWL1' . $iv . $tag . $encrypted;
     }
     public static function decrypt(string $value, string $context): string {
-        // Values kept in text columns are stored base64-encoded ("FWL1" encodes to "RldMMQ").
-        if (str_starts_with($value, 'RldMMQ')) $value = (string) base64_decode($value, true);
+        // Values kept in text columns are stored base64-encoded. Only "RldMM" is a fixed prefix: the 6th
+        // base64 character also depends on the random IV, so decode and check the real "FWL1" header.
+        if (substr($value, 0, 4) !== 'FWL1' && str_starts_with($value, 'RldMM')) {
+            $decoded = base64_decode($value, true);
+            if ($decoded !== false && substr($decoded, 0, 4) === 'FWL1') $value = $decoded;
+        }
         if (strlen($value) < 32 || substr($value, 0, 4) !== 'FWL1') throw new RuntimeException('Invalid encrypted data.');
         $plain = openssl_decrypt(substr($value, 32), 'aes-256-gcm', self::key(), OPENSSL_RAW_DATA, substr($value, 4, 12), substr($value, 16, 16), $context);
         if ($plain === false) throw new RuntimeException('Encrypted data failed authentication.');

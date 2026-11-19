@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../services/LoginAlertService.php';
+require_once __DIR__ . '/../../services/TotpService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed. Use POST.'], 405);
@@ -59,7 +60,8 @@ resetRateLimit($pdo, $ipAddress, $email);
 $deviceInfo = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown App Client';
 
 // 3. Check 2FA requirement
-$requires2fa = ($user['two_factor_enabled'] == 1);
+$requires2fa = TotpService::signInRequiresCode($pdo, (int) $user['id']);
+$user['two_factor_enabled'] = $requires2fa ? 1 : 0;
 $is2faVerified = $requires2fa ? 0 : 1;
 
 // Create Session Token

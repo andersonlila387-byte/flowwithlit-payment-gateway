@@ -47,6 +47,10 @@
     profileState.twoFactorEnabled = Boolean(enabled);
     const button = $('#twoFactorButton');
     button.textContent = enabled ? 'Manage 2FA' : 'Enable 2FA';
+    const summary = $('#twoFactorSummary');
+    if (summary) summary.textContent = enabled
+      ? 'On. You enter a code from your authenticator app each time you sign in.'
+      : 'Off. Use an authenticator app (Google Authenticator, Microsoft Authenticator or Authy) to get a sign-in code.';
     button.classList.toggle('bg-emerald-600', enabled); button.classList.toggle('hover:bg-emerald-700', enabled);
     button.classList.toggle('bg-[#0b2545]', !enabled); button.classList.toggle('hover:bg-[#132847]', !enabled);
   };
@@ -75,29 +79,51 @@
       ['#currentPassword', '#newPassword', '#confirmPassword'].forEach((selector) => { $(selector).value = ''; }); $('#passwordPanel').classList.add('hidden'); window.showToast(data.message);
     } catch (error) { window.showToast(error.message); } finally { done(); }
   };
+  // Two-factor authentication with an authenticator app: setup -> scan QR -> confirm a code.
+  const twoFactorPost = (body) => request('two-factor.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const renderTwoFactorQr = (uri) => {
+    const target = $('#twoFactorQr');
+    if (typeof window.qrcode !== 'function') { target.textContent = 'QR code unavailable. Use the setup key.'; return; }
+    const qr = window.qrcode(0, 'M'); qr.addData(uri); qr.make();
+    target.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    const svg = target.querySelector('svg'); if (svg) { svg.setAttribute('width', '100%'); svg.setAttribute('height', '100%'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'QR code for your authenticator app'); }
+  };
   window.toggleTwoFactor = async () => {
     const panel = $('#twoFactorPanel');
     if (profileState.twoFactorEnabled) {
-      $('#twoFactorEnableFields').classList.add('hidden'); $('#twoFactorDisableFields').classList.remove('hidden'); panel.classList.toggle('hidden'); return;
+      $('#twoFactorEnableFields').classList.add('hidden'); $('#twoFactorDisableFields').classList.remove('hidden');
+      $('#twoFactorPasswordField').classList.toggle('hidden', profileState.hasPassword === false);
+      panel.classList.toggle('hidden'); return;
     }
-    const button = $('#twoFactorButton'); const done = setBusy(button, 'Sending code…');
+    const button = $('#twoFactorButton'); const done = setBusy(button, 'Preparing…');
     try {
-      const data = await request('two-factor.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'request_enable' }) });
-      $('#twoFactorDisableFields').classList.add('hidden'); $('#twoFactorEnableFields').classList.remove('hidden'); panel.classList.remove('hidden'); window.showToast(data.message);
+      const data = await twoFactorPost({ action: 'setup' });
+      $('#twoFactorManualKey').textContent = data.manual_key; renderTwoFactorQr(data.otpauth_uri);
+      $('#twoFactorDisableFields').classList.add('hidden'); $('#twoFactorEnableFields').classList.remove('hidden'); panel.classList.remove('hidden');
+      $('#twoFactorCode').value = ''; $('#twoFactorCode').focus();
     } catch (error) { window.showToast(error.message); } finally { done(); }
   };
+  window.cancelTwoFactorSetup = () => { $('#twoFactorPanel').classList.add('hidden'); $('#twoFactorQr').textContent = ''; $('#twoFactorManualKey').textContent = ''; $('#twoFactorCode').value = ''; };
+  $('#twoFactorCopyKey')?.addEventListener('click', async () => {
+    const key = $('#twoFactorManualKey').textContent.replace(/\s/g, '');
+    try { await navigator.clipboard.writeText(key); window.showToast('Setup key copied.'); } catch (_) { window.showToast('Select the key and copy it manually.'); }
+  });
   window.confirmTwoFactor = async () => {
-    const code = $('#twoFactorCode').value.trim(); const button = $('#twoFactorEnableFields button'); const done = setBusy(button, 'Verifying…');
+    const code = $('#twoFactorCode').value.replace(/\s/g, '');
+    if (!/^\d{6}$/.test(code)) return window.showToast('Enter the 6-digit code from your authenticator app.');
+    const done = setBusy($('#twoFactorEnableButton'), 'Verifying…');
     try {
-      const data = await request('two-factor.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable', code }) });
-      $('#twoFactorCode').value = ''; $('#twoFactorPanel').classList.add('hidden'); setTwoFactor(true); window.showToast(data.message);
+      const data = await twoFactorPost({ action: 'enable', code });
+      window.cancelTwoFactorSetup(); setTwoFactor(true); window.showToast(data.message);
     } catch (error) { window.showToast(error.message); } finally { done(); }
   };
   window.disableTwoFactor = async () => {
-    const currentPassword = $('#twoFactorPassword').value; const button = $('#twoFactorDisableFields button'); const done = setBusy(button, 'Disabling…');
+    const code = $('#twoFactorDisableCode').value.replace(/\s/g, '');
+    if (!/^\d{6}$/.test(code)) return window.showToast('Enter the 6-digit code from your authenticator app.');
+    const done = setBusy($('#twoFactorDisableButton'), 'Disabling…');
     try {
-      const data = await request('two-factor.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'disable', current_password: currentPassword }) });
-      $('#twoFactorPassword').value = ''; $('#twoFactorPanel').classList.add('hidden'); setTwoFactor(false); window.showToast(data.message);
+      const data = await twoFactorPost({ action: 'disable', current_password: $('#twoFactorPassword').value, code });
+      $('#twoFactorPassword').value = ''; $('#twoFactorDisableCode').value = ''; $('#twoFactorPanel').classList.add('hidden'); setTwoFactor(false); window.showToast(data.message);
     } catch (error) { window.showToast(error.message); } finally { done(); }
   };
   const renderSessions = (sessions) => {
@@ -134,7 +160,7 @@
       const profile = profileData.profile || {};
       $('#profileFullName').value = profile.full_name || ''; $('#profileBusinessName').value = profile.trading_name || profile.legal_name || '';
       $('#profileEmail').value = profile.email || ''; $('#profilePhone').value = profile.phone || '';
-      setPinStatus(Boolean(profile.withdrawal_pin_set)); setTwoFactor(Boolean(Number(profile.two_factor_enabled)));
+      setPinStatus(Boolean(profile.withdrawal_pin_set)); profileState.hasPassword = profile.has_password === undefined ? true : Boolean(Number(profile.has_password)); setTwoFactor(Boolean(Number(profile.two_factor_enabled)));
       $$('[data-preference]').forEach((item) => setSwitch(item, Boolean(preferencesData.preferences?.[item.dataset.preference])));
     } catch (error) { window.showToast(error.message); }
     await loadSessions();

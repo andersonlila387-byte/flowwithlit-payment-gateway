@@ -15,6 +15,7 @@ require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../services/LoginAlertService.php';
 require_once __DIR__ . '/../../services/ApiRateLimit.php';
+require_once __DIR__ . '/../../services/TotpService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     jsonResponse(['success' => false, 'error' => 'Method not allowed. Use POST.'], 405);
@@ -105,7 +106,8 @@ try {
     $account = $q->fetch();
 
     // Same two-factor rule as password sign-in: a session stays pending until the TOTP code is entered.
-    $requires2fa = (int) $account['two_factor_enabled'] === 1;
+    $requires2fa = TotpService::signInRequiresCode($pdo, $userId);
+    $account['two_factor_enabled'] = $requires2fa ? 1 : 0;
     $session = createSession($pdo, $userId, $deviceInfo, $ipAddress, $requires2fa ? 0 : 1);
     if (!$requires2fa) LoginAlertService::send($pdo, $userId, $deviceInfo);
 

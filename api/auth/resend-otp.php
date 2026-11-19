@@ -20,7 +20,11 @@ if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     jsonResponse(['success' => false, 'error' => 'A valid email address is required.'], 400);
 }
 
-if (!in_array($type, ['email_verification', 'password_reset', '2fa'])) {
+// Sign-in 2FA uses the authenticator app only; emailing a "2fa" code would let email replace the app.
+if ($type === '2fa') {
+    jsonResponse(['success' => false, 'error' => 'Use the 6-digit code from your authenticator app.'], 400);
+}
+if (!in_array($type, ['email_verification', 'password_reset'], true)) {
     jsonResponse(['success' => false, 'error' => 'Invalid verification type.'], 400);
 }
 

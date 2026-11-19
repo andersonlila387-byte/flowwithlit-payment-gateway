@@ -28,7 +28,11 @@ if (empty($code) || strlen($code) !== 6) {
     jsonResponse(['success' => false, 'error' => 'Please enter a valid 6-digit verification code.'], 400);
 }
 
-if (!in_array($type, ['email_verification', 'password_reset', '2fa'])) {
+// Sign-in 2FA is verified only with the authenticator app (api/auth/totp-login.php), never with an email code.
+if ($type === '2fa') {
+    jsonResponse(['success' => false, 'error' => 'Use the 6-digit code from your authenticator app.'], 400);
+}
+if (!in_array($type, ['email_verification', 'password_reset'], true)) {
     jsonResponse(['success' => false, 'error' => 'Invalid verification type.'], 400);
 }
 

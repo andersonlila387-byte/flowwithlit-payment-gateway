@@ -173,8 +173,8 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
         </form>
 
         <!-- Resend Code section -->
-        <div class="mt-6 text-center sm:text-left text-xs text-slate-500">
-          Didn't receive the code? 
+        <div id="resend-section" class="mt-6 text-center sm:text-left text-xs text-slate-500">
+          Didn't receive the code?
           <button id="resend-btn" type="button" class="font-bold text-[#0b2545] hover:underline disabled:opacity-50 disabled:no-underline">
             Resend Code <span id="timer-text">(30s)</span>
           </button>
@@ -201,8 +201,10 @@ $pageDesc  = 'Verify your email address or enter your 6-digit security OTP to co
     displayEmail.innerText = email || 'your email';
 
     if (type === '2fa') {
-      document.getElementById('verify-title').innerText = '2FA Authentication Code';
-      document.getElementById('verify-desc').innerHTML = `Enter the 2FA code generated for <span class="font-bold text-slate-800">${email || 'your account'}</span>`;
+      document.getElementById('verify-title').innerText = 'Authenticator code';
+      document.getElementById('verify-desc').textContent = 'Open your authenticator app (Google Authenticator, Microsoft Authenticator or Authy) and enter the 6-digit code shown for Flowwithlit.';
+      // Authenticator codes are not emailed, so there is nothing to resend.
+      document.getElementById('resend-section')?.classList.add('hidden');
     }
 
     // OTP Input Field Movement Logic
