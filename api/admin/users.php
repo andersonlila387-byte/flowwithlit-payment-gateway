@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $user = $detail->fetch();
         if (!$user) jsonResponse(['success'=>false, 'error'=>'Customer not found.'], 404);
         $wallets=$pdo->prepare('SELECT w.id,w.uuid,w.currency_code,w.wallet_type,w.available_balance,w.pending_balance,w.status,w.created_at FROM wallets w WHERE w.user_id=? ORDER BY w.wallet_type,w.currency_code');$wallets->execute([(int)$user['id']]);
-        $receiving=$pdo->prepare('SELECT r.currency_code,r.provider,r.account_name,r.bank_name,r.account_number_last4,r.account_number_display,r.status FROM wallet_receiving_accounts r WHERE r.user_id=? ORDER BY r.created_at DESC');$receiving->execute([(int)$user['id']]);
+        $receiving=$pdo->prepare('SELECT r.currency_code,r.provider,r.account_name,r.bank_name,r.account_number_last4,r.account_number_display,r.status,JSON_UNQUOTE(JSON_EXTRACT(r.provider_payload,\'$.environment\')) environment FROM wallet_receiving_accounts r WHERE r.user_id=? ORDER BY r.created_at DESC');$receiving->execute([(int)$user['id']]);
         $banks=$pdo->prepare('SELECT bank_name,account_name,account_number_last4,currency_code,status,created_at FROM bank_accounts WHERE user_id=? ORDER BY created_at DESC');$banks->execute([(int)$user['id']]);
         $cards=$pdo->prepare('SELECT c.provider,c.card_type,c.last4,c.status,c.spending_limit,w.currency_code FROM cards c JOIN wallets w ON w.id=c.wallet_id WHERE c.user_id=? ORDER BY c.created_at DESC');$cards->execute([(int)$user['id']]);
         $crypto=$pdo->prepare('SELECT w.currency_code,a.network,a.address_display,a.tag_memo,a.status FROM crypto_deposit_addresses a JOIN wallets w ON w.id=a.wallet_id WHERE w.user_id=? ORDER BY w.currency_code,a.network');$crypto->execute([(int)$user['id']]);

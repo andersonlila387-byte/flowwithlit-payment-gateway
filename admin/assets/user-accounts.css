@@ -1,0 +1,28 @@
+.ua-summary-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+[data-ua-filter-card]{cursor:pointer;transition:border-color .15s}[data-ua-filter-card]:hover{border-color:var(--navy)}
+.user-summary-icon.warning{background:#fff4dc;color:#a15c00}.user-summary-icon.danger{background:#fde8e8;color:#b42318}
+.page-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ua-provider{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font-size:12px;font-weight:600}
+.ua-dup-panel{margin-bottom:14px;border-color:#f3c0c0}.ua-dup-panel h2{display:flex;align-items:center;gap:8px;color:#b42318}
+.ua-dup-reason{color:#b42318;font-weight:600;font-size:12px}
+.ua-row-duplicate td{background:#fff6f6}.dark .ua-row-duplicate td{background:#3a1f22}
+.ua-number{font-variant-numeric:tabular-nums}.ua-number>span:first-child{font-weight:700;color:var(--text);letter-spacing:.03em;word-break:break-all}
+.ua-number small,.ua-tag{display:block;color:var(--muted);font-size:11px}
+.ua-muted{color:var(--muted);font-style:italic}
+.ua-dup-flag{display:block;margin-top:3px;color:#b42318!important;font-size:11px;font-weight:600}
+.ua-copy{display:inline-grid;width:24px;height:24px;margin-left:6px;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--muted);vertical-align:middle;cursor:pointer}.ua-copy:hover{background:var(--line);color:var(--text)}.ua-copy .icon{width:14px;height:14px}
+.ua-status-provisioning,.ua-status-missing{background:#fff4dc!important;color:#a15c00!important}
+.ua-status-failed,.ua-status-inactive,.ua-status-retired{background:#fde8e8!important;color:#b42318!important}
+.ua-account-card{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:8px}
+.ua-account-card.is-duplicate{border-color:#f3c0c0;background:#fff6f6}.dark .ua-account-card.is-duplicate{background:#3a1f22}
+.ua-account-card small{color:var(--muted);font-size:11px}
+.ua-account-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.ua-account-top strong{color:var(--text);font-size:13px}
+.ua-account-card .button{align-self:flex-start;margin-top:4px}
+.user-detail-section>.ua-regenerate{margin:8px 0 2px}
+.ua-danger{color:#b42318!important}.ua-danger:hover{background:#fde8e8!important}
+.ua-alert{margin:14px 0 0;padding:10px 12px;border-radius:8px;background:#fde8e8;color:#b42318;font-size:12px;font-weight:600}
+.ua-job{margin:10px 0 0;color:var(--muted);font-size:11px;word-break:break-word}
+.ua-table td{vertical-align:top}
+@media(max-width:1400px){.ua-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.ua-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.ua-summary-grid{grid-template-columns:1fr}}

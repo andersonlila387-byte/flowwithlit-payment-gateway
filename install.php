@@ -97,23 +97,39 @@ function provisionPrivateStorage(): string {
     if (filesize($key) !== 32) throw new RuntimeException('The private storage encryption key is invalid. Restore the original key instead of replacing it.');
     return $root;
 }
+/** The migrations use MariaDB syntax (e.g. ADD COLUMN IF NOT EXISTS). Hostinger databases are MariaDB. */
+function assertMariaDb(PDO $pdo): void {
+    $version = (string) $pdo->query('SELECT VERSION()')->fetchColumn();
+    if (stripos($version, 'mariadb') === false) {
+        throw new RuntimeException('This database server is MySQL ' . $version . '. Flowwithlit needs MariaDB 10.3 or newer (Hostinger databases are MariaDB).');
+    }
+}
 function runMigrations(PDO $pdo, string $database): int {
+    $quoted = '`' . str_replace('`', '``', $database) . '`';
+    // One collation everywhere. A bare "CHARSET=utf8mb4" makes MariaDB fall back to utf8mb4_general_ci,
+    // which then clashes with utf8mb4_unicode_ci columns in joins on a fresh database.
+    $pdo->exec('SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci');
     foreach (migrationFiles() as $file) {
         $sql = file_get_contents($file);
         if ($sql === false) throw new RuntimeException('Could not read migration ' . basename($file) . '.');
-        $quoted = '`' . str_replace('`', '``', $database) . '`';
         $sql = preg_replace('/CREATE\\s+DATABASE\\s+IF\\s+NOT\\s+EXISTS\\s+flowwithlit_db/i', 'CREATE DATABASE IF NOT EXISTS ' . $quoted, $sql);
         $sql = preg_replace('/USE\\s+flowwithlit_db\\s*;/i', 'USE ' . $quoted . ';', $sql);
+        $sql = preg_replace('/utf8mb4_general_ci/i', 'utf8mb4_unicode_ci', $sql);
+        $sql = preg_replace('/(?:DEFAULT\\s+)?CHARSET\\s*=\\s*utf8mb4(?![_\\w])(?!\\s*COLLATE)/i', 'DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci', $sql);
         try {
+            // Hosting databases have their own names (e.g. u123456789_flow); always run inside the chosen one.
+            $pdo->exec('USE ' . $quoted);
             $pdo->exec($sql);
         } catch (Throwable $exception) {
             throw new RuntimeException('Migration ' . basename($file) . ' failed: ' . $exception->getMessage(), 0, $exception);
         }
     }
+    // Finish with every table on utf8mb4_unicode_ci so later joins never hit "Illegal mix of collations".
+    normalizeDatabaseCollation($pdo, $database);
     return count(migrationFiles());
 }
 
-$defaults = ['host' => '127.0.0.1', 'port' => '3306', 'database' => 'flowwithlit_db', 'username' => 'root', 'password' => '', 'app_url' => ''];
+$defaults = ['host' => 'localhost', 'port' => '3306', 'database' => '', 'username' => '', 'password' => '', 'app_url' => ''];
 $values = $defaults;
 $error = '';
 $success = false;
@@ -154,6 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $serverDsn = 'mysql:host=' . $values['host'] . ';port=' . $values['port'] . ';charset=utf8mb4';
             $pdo = new PDO($serverDsn, $values['username'], $values['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+            assertMariaDb($pdo);
             if (isset($_POST['create_database'])) {
                 $pdo->exec('CREATE DATABASE IF NOT EXISTS `' . str_replace('`', '``', $values['database']) . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
             }
@@ -191,13 +208,13 @@ $canCreateFirstAdmin = firstAdminSetupAvailable();
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Install Flowwithlit</title>
 <style>body{margin:0;background:#f4f7fb;color:#17233b;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:720px;margin:42px auto;padding:0 20px}.card{background:#fff;border:1px solid #e0e7f0;border-radius:16px;padding:30px;box-shadow:0 16px 45px #17233b12}h1{margin:0 0 6px;font-size:28px}p{color:#52627a}.tag{color:#2357b7;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em}.requirements{display:grid;grid-template-columns:1fr auto;gap:8px 14px;background:#f8fafc;padding:16px;border-radius:10px;margin:24px 0}.ok{color:#16734c}.bad{color:#b42318}label{display:block;font-weight:650;margin:15px 0 6px}input{box-sizing:border-box;width:100%;border:1px solid #bdc9d9;border-radius:8px;padding:11px;font:inherit}input:focus{outline:3px solid #b7d1ff;border-color:#2357b7}.row{display:grid;grid-template-columns:2fr 1fr;gap:14px}.check{display:flex;gap:9px;align-items:center;font-weight:500;margin:18px 0}.check input{width:auto}button{width:100%;border:0;border-radius:8px;background:#102b5d;color:white;padding:13px;font-weight:700;font-size:16px;cursor:pointer}button:hover{background:#173d7e}button:disabled{opacity:.55;cursor:not-allowed}.notice{padding:14px 16px;border-radius:9px;margin:20px 0}.error{background:#fff1f0;color:#9d1d16}.success{background:#eaf8ef;color:#136c42}.muted{font-size:14px}@media(max-width:560px){.wrap{margin:20px auto}.card{padding:22px}.row{grid-template-columns:1fr}}</style></head>
 <body><main class="wrap"><section class="card"><div class="tag">Flowwithlit setup</div><h1><?php echo $success ? 'Installation complete' : ($adminCreated ? 'Super administrator created' : (installed() ? 'Flowwithlit is already installed' : 'Install Flowwithlit')); ?></h1>
-<?php if ($success): ?><div class="notice success">Your database schema and local configuration are ready. For security, delete <code>install.php</code> before making the site public.</div><p><a href="index.php">Open Flowwithlit</a></p>
-<?php elseif ($adminCreated): ?><div class="notice success">Your first super administrator is ready. You can now sign in to the protected admin console.</div><p><a href="admin/login.php">Go to admin sign in</a></p>
+<?php if ($success): ?><div class="notice success">Your database tables and configuration are ready. Next, create your first super administrator.</div><p><a href="install.php"><strong>Create the first super administrator &rarr;</strong></a></p>
+<?php elseif ($adminCreated): ?><div class="notice success">Your first super administrator is ready. <strong>Now delete <code>install.php</code> from your server</strong> (Hostinger File Manager), then sign in.</div><p><a href="admin/login.php">Go to admin sign in</a></p>
 <?php elseif (installed() && $canCreateFirstAdmin): ?><p>Your database is already configured, but no administrator exists. You can create the first super administrator now.</p><?php if ($error): ?><div class="notice error"><?php echo e($error); ?></div><?php endif; ?><button id="show-admin-setup" type="button">Set up first super administrator</button><form method="post" id="first-admin-form" hidden><input type="hidden" name="csrf" value="<?php echo e($_SESSION['fwl_install_csrf']); ?>"><input type="hidden" name="action" value="create_first_admin"><label for="admin_name">Full name</label><input id="admin_name" name="admin_name" required autocomplete="name" placeholder="Your full name"><label for="admin_email">Work email</label><input id="admin_email" name="admin_email" type="email" required autocomplete="email" placeholder="you@company.com"><label for="admin_password">Password</label><input id="admin_password" name="admin_password" type="password" required minlength="12" autocomplete="new-password" placeholder="At least 12 characters"><button type="submit">Create super administrator</button></form><p class="muted">This setup option closes permanently after the first administrator is created. Delete <code>install.php</code> immediately afterward.</p>
 <?php elseif (installed()): ?><div class="notice success">A local configuration or install lock already exists. This installer will not overwrite it.</div><p class="muted">To install again in a disposable development environment, remove <code>storage/install.lock</code> and <code>.env</code> manually first.</p>
 <?php else: ?>
 <p>Connect your MySQL database, then this page creates the schema and a private <code>.env</code> configuration file.</p>
 <div class="requirements"><?php foreach ($requirements as $label => $passed): ?><span><?php echo e($label); ?></span><strong class="<?php echo $passed ? 'ok' : 'bad'; ?>"><?php echo $passed ? 'Ready' : 'Needs attention'; ?></strong><?php endforeach; ?></div>
 <?php if ($error): ?><div class="notice error"><?php echo e($error); ?></div><?php endif; ?>
-<form method="post" id="install-form"><input type="hidden" name="csrf" value="<?php echo e($_SESSION['fwl_install_csrf']); ?>"><div class="row"><div><label for="host">MySQL host</label><input id="host" name="host" required value="<?php echo e($values['host']); ?>" placeholder="127.0.0.1"></div><div><label for="port">Port</label><input id="port" name="port" required inputmode="numeric" value="<?php echo e($values['port']); ?>"></div></div><label for="database">Database name</label><input id="database" name="database" required value="<?php echo e($values['database']); ?>"><label for="username">Database username</label><input id="username" name="username" required value="<?php echo e($values['username']); ?>"><label for="password">Database password</label><input id="password" name="password" type="password" value="<?php echo e($values['password']); ?>" autocomplete="new-password"><label for="app_url">Application URL <span class="muted">optional</span></label><input id="app_url" name="app_url" type="url" value="<?php echo e($values['app_url']); ?>" placeholder="http://localhost/flowwithlit"><label class="check"><input type="checkbox" name="create_database" checked> Create database if it does not exist</label><label class="check"><input type="checkbox" name="normalize_collation" checked> Standardize this database's text collation for compatibility</label><p class="muted">This changes text collation in the selected database only; it prevents MariaDB collation conflicts during setup.</p><button type="submit" <?php echo $canInstall ? '' : 'disabled'; ?>>Install Flowwithlit</button></form>
+<form method="post" id="install-form"><input type="hidden" name="csrf" value="<?php echo e($_SESSION['fwl_install_csrf']); ?>"><div class="row"><div><label for="host">MySQL host</label><input id="host" name="host" required value="<?php echo e($values['host']); ?>" placeholder="localhost"></div><div><label for="port">Port</label><input id="port" name="port" required inputmode="numeric" value="<?php echo e($values['port']); ?>"></div></div><label for="database">Database name</label><input id="database" name="database" required value="<?php echo e($values['database']); ?>"  placeholder="u123456789_flowwithlit"><label for="username">Database username</label><input id="username" name="username" required value="<?php echo e($values['username']); ?>" placeholder="u123456789_flowuser"><label for="password">Database password</label><input id="password" name="password" type="password" value="<?php echo e($values['password']); ?>" autocomplete="new-password"><label for="app_url">Application URL <span class="muted">optional</span></label><input id="app_url" name="app_url" type="url" value="<?php echo e($values['app_url']); ?>" placeholder="http://localhost/flowwithlit"><label class="check"><input type="checkbox" name="create_database" checked> Create database if it does not exist</label><label class="check"><input type="checkbox" name="normalize_collation" checked> Standardize this database's text collation for compatibility</label><p class="muted">This changes text collation in the selected database only; it prevents MariaDB collation conflicts during setup.</p><button type="submit" <?php echo $canInstall ? '' : 'disabled'; ?>>Install Flowwithlit</button></form>
 <?php endif; ?></section></main><script>document.getElementById('install-form')?.addEventListener('submit',function(){const b=this.querySelector('button');b.disabled=true;b.textContent='Installing…';});document.getElementById('show-admin-setup')?.addEventListener('click',function(){this.hidden=true;document.getElementById('first-admin-form').hidden=false;document.getElementById('admin_name').focus();});document.getElementById('first-admin-form')?.addEventListener('submit',function(){const b=this.querySelector('button');b.disabled=true;b.textContent='Creating administrator…';});</script></body></html>

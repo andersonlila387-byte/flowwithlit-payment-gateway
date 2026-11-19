@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../config/response.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../services/PrivateStorage.php';
+require_once __DIR__ . '/../../services/ReceivingAccountNumber.php';
 
 date_default_timezone_set('UTC');
 header('Cache-Control: no-store, no-cache, must-revalidate');
@@ -61,19 +62,16 @@ if ($link['status'] !== 'active' || ($link['expires_at'] && strtotime($link['exp
 
 $bankTransfer = null;
 if ($link['currency_code'] === 'NGN') {
-    $accountQuery = $pdo->prepare("SELECT ra.account_name,ra.bank_name,ra.account_number_encrypted
+    $accountQuery = $pdo->prepare("SELECT ra.id,ra.account_name,ra.bank_name,ra.account_number_encrypted,ra.account_number_hash,ra.provider_payload
         FROM wallet_receiving_accounts ra
         JOIN wallets w ON w.id=ra.wallet_id
         WHERE ra.user_id=? AND ra.currency_code='NGN' AND ra.status='active' AND w.status='active'
         ORDER BY ra.updated_at DESC LIMIT 1");
     $accountQuery->execute([(int)$link['user_id']]);
     $account = $accountQuery->fetch();
-    if ($account && $account['account_number_encrypted']) {
-        try {
-            $bankTransfer = ['account_number'=>PrivateStorage::decrypt($account['account_number_encrypted'], 'wallet-account'), 'account_name'=>$account['account_name'], 'bank_name'=>$account['bank_name']];
-        } catch (Throwable $error) {
-            error_log('Checkout receiving account decrypt failed: ' . $error->getMessage());
-        }
+    $accountNumber = $account ? ReceivingAccountNumber::reveal($pdo, $account) : null;
+    if ($accountNumber !== null) {
+        $bankTransfer = ['account_number'=>$accountNumber, 'account_name'=>$account['account_name'], 'bank_name'=>$account['bank_name']];
     }
 }
 $amount = $link['amount'] !== null ? (float)$link['amount'] : null;

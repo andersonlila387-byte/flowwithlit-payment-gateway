@@ -20,3 +20,8 @@
 /storage/private/
 /storage/uploads/
 /node_modules/
+
+# Deployment bundles and install state.
+/flowwithlit-hostinger.zip
+/vendor.zip
+/storage/install.lock

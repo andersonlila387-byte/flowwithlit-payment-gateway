@@ -78,6 +78,7 @@ if (!function_exists('admin_component_escape')) {
         ];
         $userSubmenu = $submenu ?: [
             ['Users List', 'users-list.php', false],
+            ['User Accounts', 'user-accounts.php', false],
             ['User Identity', 'identity.php', false],
             ['User Settings', 'users.php', $activePage === 'Users'],
         ];

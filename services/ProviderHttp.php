@@ -3,8 +3,9 @@ declare(strict_types=1);
 require_once __DIR__.'/Money.php';
 
 final class ProviderRequestException extends RuntimeException {
-    public function __construct(public readonly int $httpStatus,public readonly bool $retryable,public readonly bool $ambiguous) {
-        parent::__construct('Provider request did not complete successfully.');
+    /** $providerMessage: the provider's own error text (for logs/admins only; never shown raw to customers). */
+    public function __construct(public readonly int $httpStatus,public readonly bool $retryable,public readonly bool $ambiguous,public readonly string $providerMessage='') {
+        parent::__construct('Provider request did not complete successfully.'.($providerMessage!==''?' Provider said: '.$providerMessage:''));
     }
 }
 
@@ -49,7 +50,11 @@ final class ProviderHttp {
             $ok=curl_exec($curl);$status=(int)curl_getinfo($curl,CURLINFO_HTTP_CODE);curl_close($curl);
             if($ok===false)throw new ProviderRequestException($status,true,$method!=='GET');
         }
-        if($status<200||$status>=300)throw new ProviderRequestException($status,$status===429||$status>=500,$method!=='GET'&&($status===408||$status>=500));
+        if($status<200||$status>=300){
+            $message='';$decoded=json_decode((string)$raw,true);
+            if(is_array($decoded)&&is_string($decoded['message']??null))$message=mb_substr(preg_replace('/[\x00-\x1F\x7F]+/u',' ',$decoded['message']),0,200);
+            throw new ProviderRequestException($status,$status===429||$status>=500,$method!=='GET'&&($status===408||$status>=500),$message);
+        }
         try{return ProviderJson::decode($raw);}catch(Throwable $e){throw new ProviderRequestException($status,true,$method!=='GET');}
     }
 }

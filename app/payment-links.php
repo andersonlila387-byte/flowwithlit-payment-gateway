@@ -11,7 +11,17 @@ require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/sidebar.php';
 ?>
 
-<style>#ledgerTableBody { visibility:hidden; }</style>
+<style>
+  #ledgerTableBody { visibility:hidden; }
+  /* Mobile: date inputs (iOS Safari especially) have a wide built-in minimum width and overflow the
+     screen. Let every form control shrink to its column. */
+  #invoiceForm input, #invoiceForm select, #invoiceForm textarea,
+  #createLinkForm input, #createLinkForm select, #createLinkForm textarea, input[type="date"] { min-width: 0; max-width: 100%; box-sizing: border-box; }
+  #createLinkForm .grid > * { min-width: 0; }
+  input[type="date"] { display: block; -webkit-appearance: none; appearance: none; min-height: 2.25rem; }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+  #invoiceForm .grid > * { min-width: 0; }
+</style>
 
     <!-- Scrollable Main Content Area -->
     <main class="flex-1 h-full overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 pb-28 md:pb-6 flex flex-col gap-6">
@@ -803,11 +813,11 @@ require_once __DIR__ . '/includes/sidebar.php';
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Issue Date</label>
-            <input type="date" id="invIssueDate" value="2026-06-18" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-hidden focus:border-[#0b2545] transition" />
+            <input type="date" id="invIssueDate" value="<?= gmdate('Y-m-d') ?>" class="w-full min-w-0 max-w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-hidden focus:border-[#0b2545] transition" />
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1.5">Payment Due Date</label>
-            <input type="date" id="invDueDate" value="2026-07-02" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-hidden focus:border-[#0b2545] transition" />
+            <input type="date" id="invDueDate" value="<?= gmdate('Y-m-d', strtotime('+14 days')) ?>" class="w-full min-w-0 max-w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-hidden focus:border-[#0b2545] transition" />
           </div>
         </div>
 
@@ -854,7 +864,7 @@ require_once __DIR__ . '/includes/sidebar.php';
         <!-- Notes / Terms -->
         <div>
           <label class="block text-xs font-semibold text-gray-700 mb-1.5">Customer Notes / Bank Details</label>
-          <textarea id="invNotes" rows="2" placeholder="Payment terms: Net 14 days. Please remit payment via ACH or direct card checkout." class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-hidden focus:border-[#0b2545] transition"></textarea>
+          <textarea id="invNotes" rows="2" placeholder="Payment terms: Net 14 days. Please remit payment via bank transfer or debit card checkout." class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-hidden focus:border-[#0b2545] transition"></textarea>
         </div>
 
         <!-- Submit Button -->
@@ -917,7 +927,7 @@ require_once __DIR__ . '/includes/sidebar.php';
       <div class="py-6 flex flex-col items-center justify-center bg-gray-50 rounded-2xl border border-gray-200/80 my-5">
         <span class="text-xs text-gray-400 font-medium">Total Amount Due</span>
         <div class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight mt-1" id="prevTotalAmount">$24,500.00</div>
-        <div class="text-[11px] text-gray-400 mt-1 font-mono">Accepted Rails: ACH, Wire, SEPA, Cards, USDT</div>
+        <div class="text-[11px] text-gray-400 mt-1 font-mono">Accepted: Bank transfer, Debit card</div>
       </div>
 
       <!-- Quick Action Buttons -->

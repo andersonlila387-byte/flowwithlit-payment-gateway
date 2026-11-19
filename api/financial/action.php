@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__.'/../../config/response.php';
 require_once __DIR__.'/../../config/security.php';
 require_once __DIR__.'/../../services/WalletOperations.php';
+require_once __DIR__.'/../../services/ReceivingAccountNumber.php';
 header('Cache-Control: no-store');
 if (($_SERVER['REQUEST_METHOD']??'GET')!=='POST')jsonResponse(['success'=>false,'error'=>'Method not allowed.'],405);
 $db=Database::getInstance();$input=getJsonInput();
@@ -20,10 +21,11 @@ try {
     }
     if($action==='fund') {
         // Funding instructions cannot themselves create a confirmed balance or payment.
-        $q=$db->prepare("SELECT r.account_number_encrypted,r.account_name,r.bank_name FROM wallet_receiving_accounts r JOIN wallets w ON w.id=r.wallet_id WHERE r.user_id=? AND r.currency_code=? AND r.status='active' AND w.status='active' AND w.business_id IS NULL AND w.wallet_type='personal' LIMIT 1");
+        $q=$db->prepare("SELECT r.id,r.account_number_encrypted,r.account_number_hash,r.provider_payload,r.account_name,r.bank_name FROM wallet_receiving_accounts r JOIN wallets w ON w.id=r.wallet_id WHERE r.user_id=? AND r.currency_code=? AND r.status='active' AND w.status='active' AND w.business_id IS NULL AND w.wallet_type='personal' ORDER BY r.updated_at DESC LIMIT 1");
         $q->execute([$uid,$currency]);$account=$q->fetch();
-        if(!$account)jsonResponse(['success'=>false,'error'=>'Your receiving account is not ready yet.'],409);
-        jsonResponse(['success'=>true,'status'=>'awaiting_transfer','account'=>['account_number'=>PrivateStorage::decrypt($account['account_number_encrypted'],'wallet-account'),'account_name'=>$account['account_name'],'bank_name'=>$account['bank_name']]]);
+        $number=$account?ReceivingAccountNumber::reveal($db,$account):null;
+        if($number===null)jsonResponse(['success'=>false,'error'=>'Your receiving account is not ready yet.'],409);
+        jsonResponse(['success'=>true,'status'=>'awaiting_transfer','account'=>['account_number'=>$number,'account_name'=>$account['account_name'],'bank_name'=>$account['bank_name']]]);
     }
     if($action==='swap')jsonResponse(['success'=>false,'error'=>'A server-issued executable quote is required. Conversion is being configured.','code'=>'QUOTE_REQUIRED'],409);
     jsonResponse(['success'=>false,'error'=>'Unsupported financial action.'],422);

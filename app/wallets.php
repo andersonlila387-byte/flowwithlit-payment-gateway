@@ -40,89 +40,43 @@ require_once __DIR__ . '/includes/sidebar.php';
         </div>
       </div>
 
-      <!-- Row 1: Summary KPI Cards (Combined Net Worth + Fiat Total + Crypto Total) -->
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6 flex-shrink-0">
-        
-        <!-- Total Net Worth Card -->
-        <div class="md:col-span-12 lg:col-span-6 bg-white rounded-[28px] p-6 lg:p-7 shadow-sm border border-gray-200/80 flex flex-col justify-between gap-5 relative">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500 tracking-wide">Combined Portfolio Value</span>
-              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-full">NGN reference</span>
-            </div>
+      <!-- Row 1: four simple stats. Every value comes from api/wallets/list.php (+ live rates for the crypto value). -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 flex-shrink-0">
 
-            <!-- Amount with Eye privacy toggle -->
-            <div class="flex items-center gap-3 mt-3">
-              <span id="walletTotalNetWorth" class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">₦0.00</span>
-              <button id="toggleWalletBalanceBtn" class="w-7 h-7 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition active:scale-95" title="Toggle privacy">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-              </button>
-            </div>
-
-            <div class="flex items-center gap-2 mt-2 text-xs font-medium text-gray-500">
-              <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/>
-                </svg>
-              </span>
-              <span>+$28,490.15 (4.15%) in the last 24h</span>
-            </div>
+        <!-- 1. Total balance (NGN + crypto valued in NGN) with privacy toggle -->
+        <div class="min-w-0 bg-white dark:bg-[#0c1f36] rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-200/80 dark:border-gray-700 flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">Total balance</span>
+            <button id="toggleWalletBalanceBtn" type="button" class="w-7 h-7 flex-shrink-0 rounded-full bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition active:scale-95" title="Hide or show balances" aria-label="Hide or show balances">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
           </div>
-
-          <!-- Quick breakdown bar -->
-          <div class="pt-3 border-t border-gray-100">
-            <div class="flex items-center justify-between text-xs font-semibold text-gray-600 mb-2">
-              <span id="fiatBreakdown" class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#0b2545]"></span> Fiat: ₦0.00</span>
-              <span id="cryptoBreakdown" class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Crypto: ₮0.00</span>
-            </div>
-            <div class="w-full h-2.5 rounded-full bg-gray-100 overflow-hidden flex">
-              <div class="h-full bg-[#0b2545] rounded-l-full" style="width: 59%"></div>
-              <div class="h-full bg-sky-400 rounded-r-full" style="width: 41%"></div>
-            </div>
-          </div>
+          <span id="walletTotalNetWorth" class="wallet-balance-val text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight truncate">₦0.00</span>
+          <span id="walletPortfolioNote" class="text-[11px] text-gray-400 truncate">Loading balances…</span>
         </div>
 
-        <!-- Total Fiat Currency Card -->
-        <div class="md:col-span-6 lg:col-span-3 bg-white dark:bg-[#0c1f36] rounded-[28px] p-6 shadow-sm border border-gray-200/80 dark:border-gray-700 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500 dark:text-gray-300 tracking-wide">Fiat Currencies</span>
-              <span id="fiatWalletCount" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-[#0b2545] dark:text-blue-200 border border-blue-100 dark:border-blue-800">0 Wallets</span>
-            </div>
-            <div class="text-2xl lg:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mt-3" id="fiatTotalVal">₦0.00</div>
-            <p class="text-xs text-gray-400 dark:text-gray-400 mt-1">Multi-currency bank balances</p>
-          </div>
-
-          <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
-            <div class="flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span id="fiatWalletCodes">No fiat wallets yet</span>
-            </div>
-            <a href="#fiat-section" class="text-xs font-bold text-[#0b2545] hover:underline">View &rarr;</a>
-          </div>
+        <!-- 2. Naira balance -->
+        <div class="min-w-0 bg-white dark:bg-[#0c1f36] rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-200/80 dark:border-gray-700 flex flex-col gap-2">
+          <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">Naira balance</span>
+          <span id="walletNairaTotal" class="wallet-balance-val text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight truncate">₦0.00</span>
+          <span class="text-[11px] text-gray-400 truncate">Available to spend</span>
         </div>
 
-        <!-- Total Cryptocurrency Card -->
-        <div class="md:col-span-6 lg:col-span-3 bg-white dark:bg-[#0c1f36] rounded-[28px] p-6 shadow-sm border border-gray-200/80 dark:border-gray-700 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-gray-500 dark:text-gray-300 tracking-wide">Cryptocurrencies</span>
-              <span id="cryptoWalletCount" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-200 border border-sky-200/50 dark:border-sky-800">0 Assets</span>
-            </div>
-            <div class="text-2xl lg:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mt-3" id="cryptoTotalVal">₮0.00</div>
-            <p class="text-xs text-gray-400 dark:text-gray-400 mt-1">On-chain assets · USDT reference</p>
-          </div>
+        <!-- 3. Crypto balance -->
+        <div class="min-w-0 bg-white dark:bg-[#0c1f36] rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-200/80 dark:border-gray-700 flex flex-col gap-2">
+          <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">Crypto balance</span>
+          <span id="walletCryptoTotal" class="wallet-balance-val text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight truncate">₦0.00</span>
+          <span id="walletCryptoNote" class="text-[11px] text-gray-400 truncate">No crypto yet</span>
+        </div>
 
-          <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
-            <div class="flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-              <span id="cryptoWalletCodes">No crypto wallets yet</span>
-            </div>
-            <a href="#crypto-section" class="text-xs font-bold text-[#0b2545] hover:underline">View &rarr;</a>
-          </div>
+        <!-- 4. Pending (incoming money not yet confirmed) -->
+        <div class="min-w-0 bg-white dark:bg-[#0c1f36] rounded-3xl p-4 sm:p-5 shadow-sm border border-gray-200/80 dark:border-gray-700 flex flex-col gap-2">
+          <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">Pending</span>
+          <span id="walletPendingTotal" class="wallet-balance-val text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight truncate">₦0.00</span>
+          <span class="text-[11px] text-gray-400 truncate">Waiting for confirmation</span>
         </div>
 
       </div>
@@ -260,6 +214,8 @@ require_once __DIR__ . '/includes/sidebar.php';
             <div class="flex items-center justify-between gap-3"><div><span class="block text-xs text-gray-400">Account number</span><strong id="walletReceiveAccountNumber" class="text-lg font-mono text-gray-900 dark:text-white">Loading…</strong></div><button type="button" id="walletReceiveCopy" data-panel-copy="" class="rounded-lg bg-gray-100 dark:bg-gray-800 p-2 text-gray-600 dark:text-gray-200" aria-label="Copy account number"><i data-lucide="copy" class="w-4 h-4"></i></button></div>
             <div><span class="block text-xs text-gray-400">Bank</span><strong id="walletReceiveBank" class="text-base text-gray-900 dark:text-white">Loading…</strong></div>
           </div>
+          <div id="walletReceiveStatus" role="status" aria-live="polite" class="hidden mt-4 rounded-xl p-3 text-sm"></div>
+          <button type="button" id="walletReceiveCreate" class="hidden mt-3 w-full rounded-xl bg-[#0b2545] px-4 py-3 text-sm font-bold text-white disabled:opacity-60">Create my account number</button>
           <div class="mt-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 p-3 text-xs text-amber-800 dark:text-amber-200">Your balance updates automatically after the transfer is confirmed.</div>
         </div>
         <div id="depositCryptoContent" class="deposit-content hidden mt-6">
@@ -300,23 +256,23 @@ require_once __DIR__ . '/includes/sidebar.php';
         const walletTotalNetWorth = document.getElementById('walletTotalNetWorth');
         const fiatTotalVal = document.getElementById('fiatTotalVal');
         const cryptoTotalVal = document.getElementById('cryptoTotalVal');
-        const balanceVals = document.querySelectorAll('.wallet-balance-val');
-        
-        let isNetWorthVisible = true;
-        const originalNetWorth = '₦0.00';
-        const originalFiat = '₦0.00';
-        const originalCrypto = '₮0.00';
-        const originalBalances = Array.from(balanceVals).map(el => el.textContent);
+        // Hide or show amounts. The real value is kept in data-real-value, so balances that load or
+        // refresh later are never replaced by stale placeholder values.
+        window.flowWalletAmountsHidden = false;
+        window.flowWalletApplyPrivacy = () => {
+          const hidden = window.flowWalletAmountsHidden;
+          [walletTotalNetWorth, fiatTotalVal, cryptoTotalVal, ...document.querySelectorAll('.wallet-balance-val')].forEach(el => {
+            if (!el) return;
+            if (hidden) { if (el.textContent !== '••••••••') el.dataset.realValue = el.textContent; el.textContent = '••••••••'; }
+            else if (el.dataset.realValue !== undefined) { el.textContent = el.dataset.realValue; delete el.dataset.realValue; }
+          });
+        };
 
         if (toggleWalletBalanceBtn) {
           toggleWalletBalanceBtn.addEventListener('click', () => {
-            isNetWorthVisible = !isNetWorthVisible;
-            if (walletTotalNetWorth) walletTotalNetWorth.textContent = isNetWorthVisible ? originalNetWorth : '••••••••';
-            if (fiatTotalVal) fiatTotalVal.textContent = isNetWorthVisible ? originalFiat : '••••••••';
-            if (cryptoTotalVal) cryptoTotalVal.textContent = isNetWorthVisible ? originalCrypto : '••••••••';
-            balanceVals.forEach((el, idx) => {
-              el.textContent = isNetWorthVisible ? originalBalances[idx] : '••••••••';
-            });
+            window.flowWalletAmountsHidden = !window.flowWalletAmountsHidden;
+            const isNetWorthVisible = !window.flowWalletAmountsHidden;
+            window.flowWalletApplyPrivacy();
             toggleWalletBalanceBtn.classList.toggle('text-gray-400', isNetWorthVisible);
             toggleWalletBalanceBtn.classList.toggle('text-black', !isNetWorthVisible);
           });
@@ -434,20 +390,6 @@ require_once __DIR__ . '/includes/sidebar.php';
       });
     </script>
 
-    <script>
-      (() => {
-        const grid=document.getElementById('walletsGrid'), total=document.getElementById('cryptoTotalVal'), breakdown=document.getElementById('cryptoBreakdown');
-        const updateUsdtReference=()=>{
-          const card=grid?.querySelector('.wallet-card[data-symbol="USDT"]');
-          if(!card){ if(total) total.textContent='—'; if(breakdown) breakdown.innerHTML='<span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Crypto: — USDT'; return; }
-          const raw=card.querySelector('.wallet-balance-val')?.textContent||''; const amount=Number(raw.replace(/[^0-9.-]/g,''));
-          if(!Number.isFinite(amount)){if(total) total.textContent='—';return;}
-          const display=`₮${amount.toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:8})}`;
-          if(total) total.textContent=display; if(breakdown) breakdown.innerHTML=`<span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Crypto: ${display}`;
-        };
-        if(grid){new MutationObserver(updateUsdtReference).observe(grid,{childList:true}); updateUsdtReference();}
-      })();
-    </script>
 
     <script>
       (() => {
@@ -457,13 +399,64 @@ require_once __DIR__ . '/includes/sidebar.php';
         const loadWallets = async () => {
           try {
             const response = await fetch('../api/wallets/list.php', {headers:{Authorization:`Bearer ${token()}`,Accept:'application/json'}}); const result = await response.json(); if(!response.ok || !result.success) throw new Error(result.error || 'Unable to load wallets.'); walletData=result.wallets||[]; const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); const grid=document.getElementById('walletsGrid'); if(grid){ grid.innerHTML=walletData.map(wallet=>`<article class="wallet-card bg-white rounded-3xl p-5 border border-gray-200/80 shadow-xs flex flex-col justify-between gap-4" data-type="${esc(wallet.kind)}" data-symbol="${esc(wallet.currency_code)}"><div><div class="flex items-center justify-between"><div><h3 class="text-sm font-bold text-gray-900">${esc(wallet.name)}</h3><span class="text-[10px] text-gray-400">${esc(wallet.currency_code)} · ${wallet.kind==='crypto'?'Crypto wallet':'Fiat wallet'}</span></div><span class="grid h-8 w-8 place-items-center rounded-full bg-sky-50 text-xs font-bold text-sky-700">${esc(wallet.currency_code.slice(0,2))}</span></div><div class="mt-4"><div class="text-xl font-extrabold text-gray-900 tracking-tight wallet-balance-val">${esc(money(wallet.available_balance,wallet.currency_code))}</div><div class="text-[11px] text-gray-400 mt-1">Pending: ${esc(money(wallet.pending_balance,wallet.currency_code))}</div>${wallet.account_number?`<div class="text-[11px] text-gray-400 font-mono mt-2">Account: ••••${esc(wallet.account_number.slice(-4))}</div>`:''}</div></div><div class="flex items-center gap-2 pt-3 border-t border-gray-100"><button type="button" class="flex-1 py-2 rounded-full border border-gray-200 text-gray-700 text-[11px] font-semibold" data-wallet-receive="${esc(wallet.currency_code)}">Receive</button><button type="button" class="flex-1 py-2 rounded-full bg-[#0b2545] text-white text-[11px] font-semibold" data-wallet-send="${esc(wallet.currency_code)}">Send</button></div></article>`).join(''); grid.style.visibility='visible'; }
-            const fiat=walletData.filter(wallet=>wallet.kind==='fiat'), crypto=walletData.filter(wallet=>wallet.kind==='crypto'); const counts={all:walletData.length,fiat:fiat.length,crypto:crypto.length}; document.querySelector('[data-filter=all] .wallet-filter-badge').textContent=counts.all; document.querySelector('[data-filter=fiat] .wallet-filter-badge').textContent=counts.fiat; document.querySelector('[data-filter=crypto] .wallet-filter-badge').textContent=counts.crypto;  document.getElementById('fiatWalletCount').textContent=`${fiat.length} Wallets`; document.getElementById('cryptoWalletCount').textContent=`${crypto.length} Assets`; document.getElementById('fiatWalletCodes').textContent=fiat.length?fiat.map(wallet=>wallet.currency_code).join(', '):'No fiat wallets yet'; document.getElementById('cryptoWalletCodes').textContent=crypto.length?crypto.map(wallet=>wallet.currency_code).join(', '):'No crypto wallets yet'; document.getElementById('walletsSectionTitle').textContent=`Active Currency Balances (${walletData.length})`;
+            const fiat=walletData.filter(wallet=>wallet.kind==='fiat'), crypto=walletData.filter(wallet=>wallet.kind==='crypto'); const counts={all:walletData.length,fiat:fiat.length,crypto:crypto.length}; document.querySelector('[data-filter=all] .wallet-filter-badge').textContent=counts.all; document.querySelector('[data-filter=fiat] .wallet-filter-badge').textContent=counts.fiat; document.querySelector('[data-filter=crypto] .wallet-filter-badge').textContent=counts.crypto;  document.getElementById('walletsSectionTitle').textContent=`Active Currency Balances (${walletData.length})`;
             walletData.forEach(wallet => { const card=document.querySelector(`.wallet-card[data-symbol="${wallet.currency_code}"]`); if(!card) return; const balance=card.querySelector('.wallet-balance-val'); if(balance) balance.textContent=money(wallet.available_balance,wallet.currency_code); });
-            const ngn=walletData.find(wallet=>wallet.currency_code==='NGN'); const name=document.getElementById('walletReceiveAccountName'), number=document.getElementById('walletReceiveAccountNumber'), bank=document.getElementById('walletReceiveBank'), copy=document.getElementById('walletReceiveCopy'); if(ngn?.account_number){name.textContent=ngn.account_name||'Flowwithlit account'; number.textContent=ngn.account_number; bank.textContent=ngn.bank_name||'Assigned bank'; copy.dataset.panelCopy=ngn.account_number;} else if(name){name.textContent='No receiving account yet'; number.textContent='Click Receive to create'; bank.textContent='OnePipe';}
+            // Stats: Naira and Pending are real NGN balances. Crypto is valued in NGN through api/financial/quote.php
+            // (live rate provider); when no rate is available it shows the coin amounts and is left out of the total.
+            const setStat=(id,text)=>{const el=document.getElementById(id); if(el){el.textContent=text; delete el.dataset.realValue;}};
+            const ngnWallets=fiat.filter(wallet=>wallet.currency_code==='NGN');
+            const ngnTotal=ngnWallets.reduce((sum,wallet)=>sum+Number(wallet.available_balance||0),0);
+            setStat('walletNairaTotal',money(ngnTotal,'NGN'));
+            setStat('walletPendingTotal',money(ngnWallets.reduce((sum,wallet)=>sum+Number(wallet.pending_balance||0),0),'NGN'));
+            const updatedAt=`Updated ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+            const held=crypto.filter(wallet=>Number(wallet.available_balance||0)>0);
+            const coinText=wallet=>`${Number(wallet.available_balance).toLocaleString('en-NG',{maximumFractionDigits:8})} ${wallet.currency_code}`;
+            const finishStats=(cryptoNgn)=>{
+              setStat('walletTotalNetWorth',money(ngnTotal+(cryptoNgn??0),'NGN'));
+              const note=document.getElementById('walletPortfolioNote'); if(note) note.textContent=held.length&&cryptoNgn===null?`${updatedAt} · Naira only`:updatedAt;
+              if(window.flowWalletAmountsHidden) window.flowWalletApplyPrivacy?.();
+            };
+            if(!held.length){ setStat('walletCryptoTotal',money(0,'NGN')); setStat('walletCryptoNote','No crypto yet'); finishStats(0); }
+            else {
+              setStat('walletCryptoTotal',held.length===1?coinText(held[0]):`${held.length} assets`); setStat('walletCryptoNote',held.map(coinText).join(' · '));
+              finishStats(null);
+              Promise.all(held.map(wallet=>fetch(`../api/financial/quote.php?${new URLSearchParams({from_currency:wallet.currency_code,to_currency:'NGN',amount:String(wallet.available_balance)})}`,{headers:{Authorization:`Bearer ${token()}`,Accept:'application/json'},cache:'no-store'}).then(r=>r.json()).catch(()=>null)))
+                .then(quotes=>{ if(!quotes.every(q=>q?.success&&q.available&&q.to_amount!==null)) return; const cryptoNgn=quotes.reduce((sum,q)=>sum+Number(q.to_amount),0); setStat('walletCryptoTotal',money(cryptoNgn,'NGN')); finishStats(cryptoNgn); });
+            }
+            const ngn=walletData.find(wallet=>wallet.currency_code==='NGN'); const name=document.getElementById('walletReceiveAccountName'), number=document.getElementById('walletReceiveAccountNumber'), bank=document.getElementById('walletReceiveBank'), copy=document.getElementById('walletReceiveCopy'); if(ngn?.account_number){name.textContent=ngn.account_name||'Flowwithlit account'; number.textContent=ngn.account_number; bank.textContent=ngn.bank_name||'Assigned bank'; copy.dataset.panelCopy=ngn.account_number; document.getElementById('walletReceiveCreate')?.classList.add('hidden');} else if(name && ngn?.receiving_status==='active'){name.textContent=ngn.account_name||'Flowwithlit account'; number.textContent=ngn.account_number_display||'••••'; bank.textContent=ngn.bank_name||'Assigned bank'; copy.dataset.panelCopy=''; document.getElementById('walletReceiveCreate')?.classList.add('hidden'); receiveStatus('Your full account number could not be loaded. Please contact support.','error');} else if(name && ngn?.receiving_status==='provisioning'){name.textContent='Creating your account…'; number.textContent='Please wait'; bank.textContent='—'; copy.dataset.panelCopy=''; document.getElementById('walletReceiveCreate')?.classList.add('hidden');} else if(name){name.textContent='No receiving account yet'; number.textContent='Not created yet'; bank.textContent='—'; copy.dataset.panelCopy=''; document.getElementById('walletReceiveCreate')?.classList.remove('hidden');}
             const options=document.getElementById('newWalletOptions'); if(options && result.currencies){ const owned=new Set(walletData.map(wallet=>wallet.currency_code)); options.innerHTML=result.currencies.map(currency=>owned.has(currency.code)?`<button type="button" disabled class="w-full flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4 text-left opacity-60"><span><strong class="block text-gray-600">${currency.name}</strong><small class="text-gray-400">${currency.code} · Already active</small></span><span class="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">Added</span></button>`:`<button type="button" data-wallet-option="${currency.code}" class="wallet-option w-full flex items-center justify-between rounded-2xl border border-gray-200 p-4 text-left hover:border-sky-400"><span><strong class="block text-gray-900">${currency.name}</strong><small class="text-gray-400">${currency.code} · ${currency.kind==='crypto'?'Crypto':'Fiat'} wallet</small></span><span class="text-xl">+</span></button>`).join(''); options.querySelectorAll('.wallet-option').forEach(option=>option.addEventListener('click',()=>{option.disabled=true; option.querySelector('small').textContent=`${option.dataset.walletOption} · Activation requested`; document.getElementById('addWalletFeedback').textContent='Wallet activation has been queued. It will appear after provider setup is complete.'; document.getElementById('addWalletFeedback').classList.remove('hidden');})); }
-          } catch(error) { const grid=document.getElementById('walletsGrid'); if(grid){grid.innerHTML='<div class="col-span-full rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-800">Wallet balances are unavailable right now.</div>'; grid.style.visibility='visible';} }
+          } catch(error) { const note=document.getElementById('walletPortfolioNote'); if(note) note.textContent='Balances are unavailable right now.'; const grid=document.getElementById('walletsGrid'); if(grid){grid.innerHTML='<div class="col-span-full rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-800">Wallet balances are unavailable right now.</div>'; grid.style.visibility='visible';} }
         };
-        document.getElementById('depositBtn')?.addEventListener('click', async () => { const ngn=walletData.find(wallet=>wallet.currency_code==='NGN'); if(ngn?.account_number) return; try { const response=await fetch('../api/wallets/provision-fiat.php',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token()}`},body:JSON.stringify({currency:'NGN'})}); const result=await response.json(); if(result.success&&result.account){document.getElementById('walletReceiveAccountName').textContent=result.account.account_name;document.getElementById('walletReceiveAccountNumber').textContent=result.account.account_number;document.getElementById('walletReceiveBank').textContent=result.account.bank_name;document.getElementById('walletReceiveCopy').dataset.panelCopy=result.account.account_number;} } catch(error) { const status=document.getElementById('walletReceiveStatus'); if(status) status.textContent='Receiving account is unavailable right now.'; } });
+        // Create the user's NGN receiving account and always tell them what happened.
+        const receiveStatus = (message, tone) => { const status=document.getElementById('walletReceiveStatus'); if(!status) return; if(!message){status.classList.add('hidden'); status.textContent=''; return;} const tones={info:'bg-sky-50 text-sky-800 dark:bg-sky-950/30 dark:text-sky-200',error:'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-200',success:'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200'}; status.className=`mt-4 rounded-xl p-3 text-sm ${tones[tone]||tones.info}`; status.textContent=message; };
+        let provisioning = false;
+        const provisionReceivingAccount = async () => {
+          const ngn=walletData.find(wallet=>wallet.currency_code==='NGN'); if(ngn?.account_number || provisioning) return;
+          provisioning = true; const create=document.getElementById('walletReceiveCreate'); if(create){create.disabled=true; create.textContent='Creating…';}
+          receiveStatus('Creating your account number. This can take a few seconds…','info');
+          try {
+            const response=await fetch('../api/wallets/provision-fiat.php',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token()}`},body:JSON.stringify({currency:'NGN'})});
+            let result={}; try { result=await response.json(); } catch(parseError) { result={success:false,error:`The server returned an unexpected response (HTTP ${response.status}).`}; }
+            if(result.success && result.account){
+              const number=result.account.account_number||result.account.account_number_display||'';
+              document.getElementById('walletReceiveAccountName').textContent=result.account.account_name||'Flowwithlit account';
+              document.getElementById('walletReceiveAccountNumber').textContent=number;
+              document.getElementById('walletReceiveBank').textContent=result.account.bank_name||'Assigned bank';
+              if(result.account.account_number) document.getElementById('walletReceiveCopy').dataset.panelCopy=result.account.account_number;
+              create?.classList.add('hidden'); receiveStatus('Your account number is ready.','success');
+              loadWallets();
+            } else {
+              receiveStatus(result.error||'Your account number could not be created right now. Please try again later.','error');
+            }
+          } catch(error) {
+            receiveStatus('Could not reach the server. Check your connection and try again.','error');
+          } finally {
+            provisioning = false; if(create){create.disabled=false; create.textContent='Try again';}
+          }
+        };
+        // Opening Receive for the NGN wallet creates the account number if it does not exist yet.
+        document.addEventListener('click', (event) => { const receive=event.target.closest?.('[data-wallet-receive]'); if(receive && receive.dataset.walletReceive==='NGN') provisionReceivingAccount(); });
+        document.getElementById('walletReceiveCreate')?.addEventListener('click', provisionReceivingAccount);
         loadWallets(); window.addEventListener('flowwithlit:dashboard-refresh',loadWallets); document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadWallets();});
       })();
     </script>

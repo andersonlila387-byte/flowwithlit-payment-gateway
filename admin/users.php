@@ -3,6 +3,7 @@ $localPreview = in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], tr
 require_once __DIR__.'/components/layout.php';
 admin_use_shared_layout('Users', $localPreview, [
     ['Users List', 'users-list.php', false],
+    ['User Accounts', 'user-accounts.php', false],
     ['User Identity', 'identity.php', false],
     ['User Settings', 'users.php', true],
 ]);

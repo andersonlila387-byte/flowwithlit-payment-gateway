@@ -6,6 +6,7 @@ $adminApiBase = rtrim((string) (getenv('FLOW_ADMIN_API_URL') ?: '../api/admin'),
 require_once __DIR__.'/components/layout.php';
 admin_use_shared_layout('Users', $localPreview, [
     ['Users List', 'users-list.php', true],
+    ['User Accounts', 'user-accounts.php', false],
     ['User Identity', 'identity.php', false],
     ['User Settings', 'users.php', false],
 ]);

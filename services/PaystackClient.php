@@ -10,8 +10,10 @@ final class PaystackClient {
     }
     private function call(string $method,string $path,?array $body=null):array {
         $r=$this->http->request($method,'https://api.paystack.co'.$path,['Authorization: Bearer '.$this->config->get('secret_key')],$body);
-        if(($r['status']??false)!==true||!is_array($r['data']??null))throw new ProviderRequestException(200,false,$method!=='GET');return $r['data'];
+        // ProviderJson keeps scalars as strings, so accept "true" as well as true.
+        if(!in_array($r['status']??false,[true,'true'],true)||!is_array($r['data']??null))throw new ProviderRequestException(200,false,$method!=='GET',is_string($r['message']??null)?mb_substr($r['message'],0,200):'');return $r['data'];
     }
+    public function environment():string{return $this->config->environment;}
     public function initialize(string $reference,string $email,string $amount,string $callback,string $method):array {
         Money::amount($amount,2);
         if(!in_array($method,['card','bank_transfer'],true))throw new InvalidArgumentException('Unsupported collection method.');
@@ -27,5 +29,7 @@ final class PaystackClient {
         return $this->call('GET','/bank/resolve?'.http_build_query(['account_number'=>$number,'bank_code'=>$code]));
     }
     public function receivingAccount(string $customer,string $bank):array{return $this->call('POST','/dedicated_account',['customer'=>$customer,'preferred_bank'=>$bank]);}
-    public function receivingAccounts(string $customer):array{return $this->call('GET','/dedicated_account?customer='.rawurlencode($customer));}
+    public function receivingAccounts(string $customerId):array{return $this->call('GET','/dedicated_account?'.http_build_query(['customer'=>$customerId,'active'=>'true']));}
+    /** Verify a webhook body with Paystack's x-paystack-signature (HMAC-SHA512 of the raw body with the secret key). */
+    public function validSignature(string $rawBody,string $signature):bool{return $signature!==''&&hash_equals(hash_hmac('sha512',$rawBody,$this->config->get('secret_key')),strtolower($signature));}
 }

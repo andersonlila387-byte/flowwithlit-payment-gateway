@@ -4,8 +4,20 @@ require_once __DIR__.'/../_admin.php';
 require_once __DIR__.'/../../services/PrivateStorage.php';
 header('Cache-Control: no-store');
 $input=adminMethod(['GET','POST']);$pdo=Database::getInstance();[$session,$role]=requireAdmin($pdo,$input);requireAdminRole($role,['super_admin','finance'],'manage API connections');
+$appUrl=rtrim((string)(getenv('FLOW_APP_URL')?:''),'/');
+// Display-only fallback for this admin screen: if FLOW_APP_URL isn't set, show the site address the
+// admin is using now (scheme + host + install folder), so the webhook URL can be copied correctly.
+if($appUrl===''&&preg_match('/^[a-z0-9.-]+(:[0-9]+)?$/i',(string)($_SERVER['HTTP_HOST']??''))){
+    $https=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')||strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??''))==='https';
+    $base=rtrim(str_replace('\\','/',dirname((string)($_SERVER['SCRIPT_NAME']??'/api/admin/x.php'),3)),'/');
+    $appUrl=($https?'https':'http').'://'.strtolower((string)$_SERVER['HTTP_HOST']).$base;
+}
 $providers=[
- ['key'=>'paystack','name'=>'Paystack','category'=>'payments','description'=>'Card, bank and transfer collection for Nigerian payments.','environments'=>['test','live'],'fields'=>[['key'=>'public_key','label'=>'Public key','required'=>true],['key'=>'secret_key','label'=>'Secret key','type'=>'secret','required'=>true]]],
+ ['key'=>'paystack','name'=>'Paystack','category'=>'payments','description'=>'Card, bank and transfer collection, bank lookup, and dedicated account numbers for users.','environments'=>['test','live'],
+  'webhook_url'=>($appUrl!==''?$appUrl:'https://YOUR-DOMAIN').'/api/webhooks/paystack.php',
+  'fields'=>[['key'=>'public_key','label'=>'Public key','required'=>true],['key'=>'secret_key','label'=>'Secret key','type'=>'secret','required'=>true],
+   ['key'=>'account_numbers','label'=>'Give every user a dedicated account number (Paystack Dedicated Virtual Accounts)','type'=>'boolean','help'=>'Paystack must first enable Dedicated Virtual Accounts on your business. When on, new account numbers come from Paystack instead of OnePipe. Also paste the webhook URL below into Paystack → Settings → API Keys & Webhooks.'],
+   ['key'=>'preferred_bank','label'=>'Bank for account numbers (live mode)','type'=>'select','default'=>'wema-bank','options'=>[['value'=>'wema-bank','label'=>'Wema Bank'],['value'=>'titan-paystack','label'=>'Paystack-Titan']],'help'=>'Test mode always uses Paystack\'s test bank.']]],
  ['key'=>'flutterwave','name'=>'Flutterwave','category'=>'payments','description'=>'Multi-channel payment processing.','environments'=>['test','live'],'fields'=>[['key'=>'public_key','label'=>'Public key','required'=>true],['key'=>'secret_key','label'=>'Secret key','type'=>'secret','required'=>true]]],
  ['key'=>'onepipe','name'=>'OnePipe','category'=>'banking','description'=>'Bank account and transfer infrastructure.','environments'=>['test','live'],'fields'=>[['key'=>'api_key','label'=>'API key','type'=>'secret','required'=>true],['key'=>'api_secret','label'=>'API secret','type'=>'secret','required'=>true],['key'=>'auth_provider','label'=>'Auth provider','required'=>true],['key'=>'base_url','label'=>'API base URL','required'=>false]]],
  ['key'=>'breet','name'=>'Breet','category'=>'crypto payments','description'=>'Crypto deposits and settlement. Test uses Breet sandbox; live uses production.','environments'=>['test','live'],'fields'=>[['key'=>'app_id','label'=>'App ID','required'=>true],['key'=>'app_secret','label'=>'App Secret','type'=>'secret','required'=>true],['key'=>'webhook_secret','label'=>'Webhook verification secret','type'=>'secret','required'=>true]]],
